@@ -1,4 +1,4 @@
-project_name
+Clonal GNN
 ==============================
 
 GNN-based approach to transfer clonal infromation from refrerence single cell data to a ST slide
