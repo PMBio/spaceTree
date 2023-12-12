@@ -21,13 +21,15 @@ import spaceTree.utils as utils
 from spaceTree.models import *
 import os
 import matplotlib as mpl
+from torch_geometric.loader import NeighborLoader
+from torch_geometric.loader import NeighborLoader
 
 os.chdir("/home/o313a/clonal_GNN/")
 
 #%%
 
-data = torch.load("data/processed/data.pt")
-with open('data/processed/full_encoding.pkl', 'rb') as handle:
+data = torch.load("data/processed/data_visium.pt")
+with open('data/processed/full_encoding_visium.pkl', 'rb') as handle:
     encoder_dict = pickle.load(handle)
 node_encoder_rev = {val:key for key,val in encoder_dict["nodes"].items()}
 node_encoder_clone = {val:key for key,val in encoder_dict["clones"].items()}
@@ -84,114 +86,152 @@ weight_clone = torch.tensor(weight_clone_values, dtype=torch.float)
 data.num_classes_clone = len(data.y_clone.unique())
 data.num_classes_type = len(data.y_type.unique())
 
-# %%
-class GraphDataset(Dataset):
-    """Custom Dataset for loading a single graph and its associated mask."""
-    
-    def __init__(self, data, mask):
-        self.data = data
-        self.mask = mask
-    
-    def __len__(self):
-        # Returns 1 because this dataset contains only a single graph
-        return 1  
-    
-    def __getitem__(self, idx):
-        """Returns the graph data and its mask."""
-        return self.data, self.mask
+del data.edge_type
 
-# Create dummy datasets for training and testing
-train_dataset = GraphDataset(data, data.train_mask)
-test_dataset = GraphDataset(data, data.test_mask)
+train_loader = NeighborLoader(
+    data,
+    num_neighbors=[10] * 3,
+    batch_size=128,input_nodes = data.train_mask
+)
 
-# Create DataLoaders
-# Note: Since the dataset contains only one graph, shuffling won't have an effect
-train_loader = DataLoader(train_dataset, batch_size=1)
-test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+valid_loader = NeighborLoader(
+    data,
+    num_neighbors=[10] * 3,
+    batch_size=128,input_nodes = data.test_mask
+)
 
 # %%
 
 norm_sim = np.load("data/interim/clone_dist_over.npy")
-sns.clustermap(norm_sim, figsize=(5,5))
+sns.clustermap(norm_sim, figsize=(5,5), xticklabels=1)
 norm_sim = torch.tensor(norm_sim)
 # %%
-device = torch.device('cuda:0')
+device = torch.device('cuda:1')
 data = data.to(device)
 weight_clone = weight_clone.to(device)
 weight_type = weight_type.to(device)
 norm_sim = norm_sim.to(device)
 #%%
-import itertools
+# import itertools
 
-lrs = [1e-2,5e-2,1e-3,1e-4]
-hid_dims = [32,64,128]
-heads = [1,3,5]
-all_params = [lrs, hid_dims, heads]
-all_params = list(itertools.product(*all_params))
+# lrs = [1e-2,5e-2,1e-3,1e-4]
+# hid_dims = [32,64,128]
+# heads = [1,3,5]
+# all_params = [lrs, hid_dims, heads]
+# all_params = list(itertools.product(*all_params))
+# # %%
+# for lr, hid_dim, head in all_params:
+
+#     model = GATLightningModule(data, weight_clone, weight_type, norm_sim = norm_sim, learning_rate=lr, heads=head, dim_h = hid_dim)
+#     model = model.to(device)
+#     logger1 = TensorBoardLogger('logs_visium', name = f"round1_{lr}_{hid_dim}_{head}")
+#     early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
+#     # Train
+#     trainer1 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", logger=logger1, callbacks = [early_stop_callback], log_every_n_steps=10)
+#     trainer1.fit(model, train_loader, test_loader)
+
+#     # Switch to unweighted loss and reset the early stopping callback's state
+#     model.use_weighted = True
+#     early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
+#     logger2 = TensorBoardLogger('logs_visium', name = f"round2_{lr}_{hid_dim}_{head}")
+
+#     # Train with unweighted loss
+#     trainer2 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", logger=logger2, callbacks = [early_stop_callback],log_every_n_steps=60)
+#     trainer2.fit(model, train_loader, test_loader)
+#     del model
 # %%
-for lr, hid_dim, head in all_params:
-
-    model = GATLightningModule(data, weight_clone, weight_type, norm_sim = norm_sim, learning_rate=lr, heads=head, dim_h = hid_dim)
-    model = model.to(device)
-    logger1 = TensorBoardLogger('logs_visium', name = f"round1_{lr}_{hid_dim}_{head}")
-    early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
-    # Train
-    trainer1 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", logger=logger1, callbacks = [early_stop_callback], log_every_n_steps=10)
-    trainer1.fit(model, train_loader, test_loader)
-
-    # Switch to unweighted loss and reset the early stopping callback's state
-    model.use_weighted = True
-    early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
-    logger2 = TensorBoardLogger('logs_visium', name = f"round2_{lr}_{hid_dim}_{head}")
-
-    # Train with unweighted loss
-    trainer2 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", logger=logger2, callbacks = [early_stop_callback],log_every_n_steps=60)
-    trainer2.fit(model, train_loader, test_loader)
-    del model
-# %%
-lr = 1e-2
-hid_dim = 64
+lr = 5e-2
+hid_dim = 100
 head = 1
-model = GATLightningModule(data, weight_clone, weight_type, norm_sim = norm_sim, learning_rate=0.01, heads=3, dim_h = 32)
+wd = 0.01
+class MyMetricsCallback(pl.Callback):
+    def __init__(self):
+        super().__init__()
+        self.train_metrics = []
+        self.val_metrics = []
+
+    def on_train_batch_end(self, trainer, pl_module, *args, **kwargs):
+        # Collect metrics logged in training_step
+        metrics = trainer.logged_metrics
+        self.train_metrics.append(metrics.copy())
+
+    def on_validation_batch_end(self, trainer, pl_module, *args, **kwargs):
+        # Collect metrics logged in validation_step
+        metrics = trainer.logged_metrics
+        self.val_metrics.append(metrics.copy())
+
+    def get_metrics(self):
+        return {
+            "train": self.train_metrics,
+            "val": self.val_metrics
+        }
+metrics_callback = MyMetricsCallback()
+# model = GATLightningModule_sampler(data, weight_clone, weight_type, norm_sim = norm_sim, 
+#                            learning_rate=0.005, heads=1, dim_h = hid_dim,
+#                            weight_decay = wd)
+model = GATLightningModule(data, weight_clone, weight_type, norm_sim = norm_sim, 
+                           learning_rate=0.005, heads=1, dim_h = hid_dim,
+                           weight_decay = wd)
 model = model.to(device)
+
 logger1 = TensorBoardLogger('logs_visium', name = f"round1_{lr}_{hid_dim}_{head}")
 early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
 # Train
-trainer1 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", logger=logger1, callbacks = [early_stop_callback], log_every_n_steps=10)
-trainer1.fit(model, train_loader, test_loader)
+trainer1 = pl.Trainer(max_epochs=1000, devices=[1], accelerator = "cuda", 
+                      logger=logger1, callbacks = [early_stop_callback,metrics_callback], 
+                      log_every_n_steps=10)
+trainer1.fit(model, train_loader, valid_loader)
+# model.use_weighted = False
 
-# Switch to unweighted loss and reset the early stopping callback's state
-model.use_weighted = True
-early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
-logger2 = TensorBoardLogger('logs_visium', name = f"round2_{lr}_{hid_dim}_{head}")
 
-# Train with unweighted loss
-trainer2 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", logger=logger2, callbacks = [early_stop_callback],log_every_n_steps=60)
-trainer2.fit(model, train_loader, test_loader)
+# early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
+# logger2 = TensorBoardLogger('logs_visium', name = f"round2_{lr}_{hid_dim}_{head}")
+
+# # Train with unweighted loss
+# trainer2 = pl.Trainer(max_epochs=1000, devices=[1], accelerator = "cuda", logger=logger2, 
+#                       callbacks = [early_stop_callback],log_every_n_steps=60)
+# trainer2.fit(model, train_loader, valid_loader)
 
 model.eval()
+#%%
+stored_metrics = metrics_callback.get_metrics()
+extracted_clone = [metrics_dict["validation_acc_clone"].item() 
+                     for metrics_dict in stored_metrics["val"] 
+                     if "validation_acc_clone" in metrics_dict and torch.is_tensor(metrics_dict["validation_acc_clone"])]
+extracted_ct = [metrics_dict["validation_acc_ct"].item() 
+                     for metrics_dict in stored_metrics["val"] 
+                     if "validation_acc_ct" in metrics_dict and torch.is_tensor(metrics_dict["validation_acc_ct"])]
+plt.plot(extracted_clone, label = "clone")
+plt.plot(extracted_ct, label = "cell type")
+plt.legend()
+plt.show()
 
 # %%
 model = model.to(device)
-out, w = model()
-
-clone_res,ct_res= utils.get_results(out, data, node_encoder_rev, node_encoder_ct)
-
-#%%
+with torch.no_grad():
+    out, w = model(data)
+clone_res,ct_res= utils.get_results(out, data, node_encoder_rev, node_encoder_ct,node_encoder_clone, activation = "softmax")
 path = "data/raw/visium/"
 visium = sc.read_visium(path, genome=None, count_file='CytAssist_FFPE_Human_Breast_Cancer_filtered_feature_bc_matrix.h5',
                         library_id=None, load_images=True, source_image_path=None)
 visium.var_names_make_unique()
 coor_int = [[int(x[0]),int(x[1])] for x in visium.obsm["spatial"]]
 visium.obsm["spatial"] = np.array(coor_int)
-#%%
 clones_columns = clone_res.columns
 ct_columns = ct_res.columns
 visium.obs = visium.obs.join(clone_res).join(ct_res)
 visium.obs["clone"] = visium.obs[clones_columns].idxmax(axis = 1)
 visium.obs.clone = visium.obs.clone.astype("str")
 visium.obs["cell_type"] = visium.obs[ct_columns].idxmax(axis = 1)
-#%%
+present_clones = clones_columns[visium.obs[clones_columns].max(axis = 0) >0.1]
+with mpl.rc_context({'axes.facecolor':  'black',
+                     'figure.figsize': [10, 10],
+                      "font.size" : 25}):
+    sc.pl.spatial(visium, cmap='magma',
+                  # show first 8 cell types
+                  color=present_clones,
+                img_key='lowres', alpha_img = 0.5,
+                 )
 with mpl.rc_context({'axes.facecolor':  'black',
                      'figure.figsize': [10, 10]}):
     sc.pl.spatial(visium, cmap='magma',
@@ -199,15 +239,8 @@ with mpl.rc_context({'axes.facecolor':  'black',
                   color=["cell_type", 'clone'],
                 img_key='lowres', alpha_img = 0.5,
                  )
-#%%
-with mpl.rc_context({'axes.facecolor':  'black',
-                     'figure.figsize': [10, 10],
-                      "font.size" : 25}):
-    sc.pl.spatial(visium, cmap='magma',
-                  # show first 8 cell types
-                  color=clones_columns,
-                img_key='lowres', alpha_img = 0.5,
-                 )
+
+
 #%%
 annotation = pd.read_excel("data/raw/Requested_Cell_Barcode_Type_Matrices.xlsx.1", sheet_name="Visium", index_col=0)
 annotation.Annotation.replace("DCIS #2", "DCIS 1", inplace=True)
@@ -247,6 +280,7 @@ cell_type_colors = {
     
     # Other categories
     "Macrophages 2": "#17becf",
+    "Macrophages 1": "#17becf",
     "Mast Cells": "#9edae5",
     "Myoepi ACTA2+": "#aec7e8",
     "Myoepi KRT15+": "#ffbb78",

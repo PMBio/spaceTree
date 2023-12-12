@@ -6,17 +6,28 @@ from torch_geometric.utils import remove_self_loops
 from tqdm import tqdm
 import seaborn as sns
 import matplotlib.pyplot as plt
-def get_results(pred, data, node_encoder_rev, node_encoder_ct):
+from sparsemax import Sparsemax
+
+def get_results(pred, data, node_encoder_rev, node_encoder_ct, node_encoder_cl, activation = None):
     pred_clone = pred[:,:data.num_classes_clone-1]
     pred_cell_type = pred[:,data.num_classes_clone-1:]
-    pred_clone = np.exp(F.log_softmax(pred_clone, dim=1).detach().cpu().numpy())
-    pred_cell_type = np.exp(F.log_softmax(pred_cell_type, dim=1).detach().cpu().numpy())
+    if activation == None:
+        pred_clone = pred_clone.detach().cpu().numpy()
+        pred_cell_type = pred_cell_type.detach().cpu().numpy()
+    elif activation == "sparsemax":
+        pred_clone = Sparsemax(dim = 1)(pred_clone).detach().cpu().numpy()
+        pred_cell_type = Sparsemax(dim = 1)(pred_cell_type).detach().cpu().numpy()
+    elif activation == "softmax":
+        pred_clone = np.exp(pred_clone.detach().cpu().numpy())
+        pred_cell_type = np.exp(pred_cell_type.detach().cpu().numpy())
     cells_hold_out =[node_encoder_rev[x.item()] for x in data.hold_out]
     clone_res = pd.DataFrame(pred_clone[data.hold_out.detach().cpu().numpy()], index = cells_hold_out)
-    clone_res.columns =list(np.arange(pred_clone.shape[1]))[:-1] + ["diploid"]
+    clone_res.columns =[node_encoder_cl[x] for x in clone_res.columns]
     ct_res = pd.DataFrame(pred_cell_type[data.hold_out.detach().cpu().numpy()], index = cells_hold_out)
     ct_res.columns = [node_encoder_ct[x] for x in ct_res.columns]
     return(clone_res,ct_res)
+
+
 
 def rotate_90_degrees_clockwise(matrix):
     min_x, min_y = matrix.min(axis=0)
@@ -80,6 +91,8 @@ def get_attention_visium(w,node_encoder_rev, data,coordinates):
                     dist = "first_neighbour"
                 elif dist == 4:
                     dist = "second_neighbour"
+                elif dist == 0:
+                    dist = "self"
             else:
                 dist = "reference"
         else:
@@ -98,28 +111,6 @@ def get_attention_visium(w,node_encoder_rev, data,coordinates):
 
     return(full_df)
 
-def plot_xenium(x,y,hue,palette = None):
-    x= -x 
-    y = -y
-    if isinstance(hue, pd.Series):
-        n_plots = 1
-    else:
-        n_plots = hue.shape[1]
-    fig, axs = plt.subplots(1, n_plots, figsize=(5* n_plots, 7))
-    if n_plots != 1:
-        for i in range(n_plots):
-            ax = axs[i]
-            sns.scatterplot(x = y, y = x, hue = hue.iloc[:,i],
-                            alpha = 1, s = 1, palette = palette, ax = ax)
-            ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
-            ax.axis("off")
-    else:
-        ax = axs
-        sns.scatterplot(x = y, y = x, hue = hue,
-                        alpha = 1, s = 1, palette = palette, ax = ax)
-        ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
-        ax.axis("off")
-    plt.show()
 
 
 def get_attention(w,node_encoder_rev, data,coordinates):
@@ -176,5 +167,57 @@ def get_attention(w,node_encoder_rev, data,coordinates):
 
     full_df = full_df.pivot(columns = "distance", values = "weight", index = "target")
     return(full_df)
+
+def check_class_distributions(data, weight_clone, weight_type, norm_sim):
+    num_class_train = data.y_clone[data.train_mask].unique().shape[0]
+    num_class_total = len(data.y_clone.unique())
+    assert num_class_total -1 == num_class_train, f"""Number of *clone* classes in training set {num_class_train} is not
+    equal to total number of classes {num_class_total -1}"""
+    assert num_class_total -1 == len(weight_clone), "Number of *clone* classes is not equal to number of weights"
+    assert num_class_total -1 == norm_sim.shape[0], "Number of *clone* classes is not equal to number of similarity scores"
+
+    num_class_train = data.y_type[data.train_mask].unique().shape[0]
+    num_class_total = len(data.y_type.unique())
+    assert num_class_total -1 == num_class_train, "Number of *type* classes in training set is not equal to total number of classes"
+
+def compute_class_weights(y_train):
+    """Calculate class weights based on the class sample count."""
+    class_sample_count = np.array([len(np.where(y_train == t)[0]) for t in np.unique(y_train)])
+    return 1. / class_sample_count
+
+def plot_metrics(stored_metrics):
+    extracted_clone = [metrics_dict["validation_acc_clone"].item() 
+                        for metrics_dict in stored_metrics["val"] 
+                        if "validation_acc_clone" in metrics_dict and torch.is_tensor(metrics_dict["validation_acc_clone"])]
+    extracted_ct = [metrics_dict["validation_acc_ct"].item() 
+                        for metrics_dict in stored_metrics["val"] 
+                        if "validation_acc_ct" in metrics_dict and torch.is_tensor(metrics_dict["validation_acc_ct"])]
+    plt.plot(extracted_clone, label = "clone")
+    plt.plot(extracted_ct, label = "cell type")
+    plt.legend()
+    plt.show()
+
+
+# class MyMetricsCallback(pl.Callback):
+#     def __init__(self):
+#         super().__init__()
+#         self.train_metrics = []
+#         self.val_metrics = []
+
+#     def on_train_batch_end(self, trainer, pl_module, *args, **kwargs):
+#         # Collect metrics logged in training_step
+#         metrics = trainer.logged_metrics
+#         self.train_metrics.append(metrics.copy())
+
+#     def on_validation_batch_end(self, trainer, pl_module, *args, **kwargs):
+#         # Collect metrics logged in validation_step
+#         metrics = trainer.logged_metrics
+#         self.val_metrics.append(metrics.copy())
+
+#     def get_metrics(self):
+#         return {
+#             "train": self.train_metrics,
+#             "val": self.val_metrics
+#         }
 
 

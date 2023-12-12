@@ -21,14 +21,13 @@ from tqdm import tqdm
 import scanpy as sc
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from sklearn.metrics import f1_score
 import spaceTree.utils as utils
+import spaceTree.plotting as plotting
+
 from spaceTree.models import *
 import os
 import matplotlib as mpl
-from sklearn.metrics import confusion_matrix
 from torch_geometric.loader import NeighborLoader
-
 
 os.chdir("/home/o313a/clonal_GNN/")
 
@@ -40,9 +39,10 @@ def compute_class_weights(y_train):
 norm_sim = np.load("data/interim/clone_dist_over.npy")
 norm_sim = torch.tensor(norm_sim)
 # %%
-d = 20
-data = torch.load(f"data/processed/data_xen{d}.pt")
-with open(f'data/processed/full_encoding_xen{d}.pkl', 'rb') as handle:
+edge_types = ["5g"]
+i = 0
+data = torch.load(f"data/processed/data_xen_{edge_types[i]}.pt")
+with open(f'data/processed/full_encoding_xen_{edge_types[i]}.pkl', 'rb') as handle:
     encoder_dict = pickle.load(handle)
 node_encoder_rev = {val:key for key,val in encoder_dict["nodes"].items()}
 node_encoder_clone = {val:key for key,val in encoder_dict["clones"].items()}
@@ -105,6 +105,10 @@ valid_loader = NeighborLoader(
     num_neighbors=[10] * 3,
     batch_size=128,input_nodes = data.test_mask
 )
+hold_out_loader = NeighborLoader(data,
+    num_neighbors=[10] * 3,
+    batch_size=128,input_nodes = data.hold_out
+)
 # %%
 device = torch.device('cuda:0')
 data = data.to(device)
@@ -112,36 +116,71 @@ weight_clone = weight_clone.to(device)
 weight_type = weight_type.to(device)
 norm_sim = norm_sim.to(device)
 
-model = GATLightningModule_sampler(data, weight_clone, weight_type, norm_sim = norm_sim, learning_rate=0.005, heads=3, dim_h = 32).to('cuda:0')
-
+# model = GATLightningModule_sampler(data, weight_clone, 
+#     weight_type, norm_sim = norm_sim, 
+#     learning_rate=0.005, heads=3, dim_h = 120).to('cuda:0')
+model = GATLightningModule_sampler(data, weight_clone, 
+    weight_type, norm_sim = norm_sim, 
+    learning_rate=0.005, heads=3, dim_h = 120).to('cuda:0')
 
 # %%
-# logger1 = TensorBoardLogger('xen_training', name = "weighted_loss_improv")  
+# logger1 = TensorBoardLogger('xen_multisample', name = "round1")  
 early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
-# Train
-trainer1 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", callbacks = [early_stop_callback], log_every_n_steps=10)
+trainer1 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", 
+                      callbacks = [early_stop_callback], log_every_n_steps=10)
 trainer1.fit(model, train_loader, valid_loader)
 
-# %%
 # Switch to unweighted loss and reset the early stopping callback's state
 model.use_weighted = True
 early_stop_callback = pl.callbacks.EarlyStopping(monitor="validation_combined_loss", min_delta=0.001, patience=10, verbose=True, mode="min")
-# logger2 = TensorBoardLogger('xen_training', name = "finetuning")
-# %%
+# logger2 = TensorBoardLogger('xen_multisample', name = "round2")
 # Train with unweighted loss
-trainer2 = pl.Trainer(max_epochs=1000, devices=1, accelerator = "cuda", callbacks = [early_stop_callback],log_every_n_steps=60)
+trainer2 = pl.Trainer(max_epochs=1000, devices=1, 
+                      accelerator = "cuda", callbacks = [early_stop_callback],
+                      log_every_n_steps=60)
 trainer2.fit(model, train_loader, valid_loader)
 
-# %%
+
+
 model.eval()
 
-
-
-# %%
 model = model.to(device)
-out, w = model(data)
+# %%
+with torch.no_grad():
+    out,w = model(data)
+# %%
+batch_size = 128
+model_output_size = data.num_classes_clone + data.num_classes_type - 2
+all_predictions = torch.zeros(data.x.size(0), model_output_size, device=device)
+# Use a tensor to track which nodes have been seen
+seen_nodes = torch.full((data.x.size(0),), False, dtype=torch.bool, device=device)
+# Iterate over the NeighborLoader for the hold-out set
+model.to(device).eval()
+w1 = []
+w2 = []
+with torch.no_grad():
+    for batch in hold_out_loader:
+        # Move batch to device
+        batch = batch.to(device)
+        
+        # Forward pass
+        out, w = model(batch)
+        w1.append(w[0][:batch.num_nodes])
+        w2.append(w[1][:batch.num_nodes])
+        
+        # Get the original nodes in the current batch
+        batch_node_indices = batch.n_id[:batch.num_nodes]
 
-clone_res,ct_res= utils.get_results(out, data, node_encoder_rev, node_encoder_ct)
+        # Update the predictions and the seen nodes
+        all_predictions[batch_node_indices] = out
+        seen_nodes[batch_node_indices] = True
+
+assert seen_nodes[data.hold_out].all(), "Not all hold_out nodes were seen in the loader"
+#%%
+w = (torch.cat(w1,1),torch.cat(w2,0))
+# clone_res,ct_res= utils.get_results(out, data, node_encoder_rev, node_encoder_ct,node_encoder_clone, activation = "softmax")
+clone_res,ct_res= utils.get_results(all_predictions, data, node_encoder_rev, node_encoder_ct,node_encoder_clone, activation = "softmax")
+
 #%%
 xenium = sc.read_h5ad("data/interim/scanvi_xenium.h5ad")
 
@@ -157,82 +196,28 @@ xenium.obs["cell_type"] = xenium.obs[ct_columns].idxmax(axis = 1)
 
 
 # %%
-utils.plot_xenium(xenium.obs.x_centroid, xenium.obs.y_centroid, 
-            xenium.obs.clone, palette = "tab20")
-# %%
-utils.plot_xenium(xenium.obs.x_centroid, xenium.obs.y_centroid, 
-            xenium.obs.cell_type, palette = "tab20")
-
-# %%
-annotation = pd.read_excel("data/raw/Requested_Cell_Barcode_Type_Matrices.xlsx.1", sheet_name="Xenium R1 Fig1-5 (supervised)", index_col=0)
-annotation.Cluster.replace("DCIS_2", "DCIS 1", inplace=True)
-annotation.Cluster.replace("DCIS_1", "DCIS 2", inplace=True)
-annotation.columns = ["Annotation"]
-annotation.index = [str(x) for x in annotation.index]
-# %%
-
-xenium.obs = xenium.obs.join(annotation)
-
-# %%
-#%%
-xenium.obs.cell_type.fillna("unknown", inplace = True)
-list1 = list(set(xenium.obs.cell_type))
-list2 = list(set(xenium.obs.Annotation))
-mapping_dict = {}
-
-for name in list2:
-    if isinstance(name, str):
-        replaced_name = name.replace('_', ' ')
-        if replaced_name in list1:
-            mapping_dict[name] = replaced_name
-        elif name == "Unlabeled":
-            mapping_dict[name] = 'unknown'
-            mapping_dict['Unlabeled'] = 'unknown'
-        else:
-            mapping_dict[name] = name
-    else:
-        mapping_dict[name] = 'unknown'
-mapping_dict['DCIS 1'] = 'DCIS 2'
-mapping_dict['DCIS 2'] = 'DCIS 1'
+plotting.plot_xenium(xenium.obs.x_centroid, xenium.obs.y_centroid, 
+            xenium.obs.clone, palette = "tab10")
 
 #%%
-xenium.obs.Annotation = xenium.obs.Annotation.map(mapping_dict)
+ct_palette = sns.color_palette("tab20", len(set(xenium.obs.Annotation)))
+ct_palette = dict(zip(set(xenium.obs.Annotation), ct_palette))
 #%%
-utils.plot_xenium(xenium.obs.x_centroid, xenium.obs.y_centroid, 
-            xenium.obs.Annotation, palette = "tab20")
-
+plotting.plot_xenium(xenium.obs.x_centroid, xenium.obs.y_centroid, 
+            xenium.obs.Annotation, palette = ct_palette)
+plotting.plot_xenium(xenium.obs.x_centroid, xenium.obs.y_centroid, 
+            xenium.obs.cell_type, palette = ct_palette)
 #%%
-labels = list(set(xenium.obs.Annotation).intersection(set(xenium.obs.cell_type)))
-c_mat = pd.DataFrame(confusion_matrix(xenium.obs.Annotation, xenium.obs.cell_type, labels = labels, normalize = 'true'), index = labels, columns = labels)
+_,f1 = plotting.confusion(xenium,"Annotation","cell_type")
 #%%
-sns.heatmap(c_mat, linewidth=.5, cmap = "Blues", annot = True, fmt=".1f")
-
-# %%
-def f1_from_confusion(c_mat):
-    # Assuming c_mat is the confusion matrix
-    # For a normalized confusion matrix, diagonal elements represent recall for each class
-    recall = np.diag(c_mat)
-    
-    # Precision for each class can be calculated as the diagonal element divided by the sum of elements in the column
-    precision = np.diag(c_mat) / np.sum(c_mat, axis=0)
-    
-    # Calculate the F1 score for each class
-    f1 = 2 * precision * recall / (precision + recall)
-    
-    # If you want the average F1 score, take the mean of the F1 scores for each class
-    avg_f1 = np.nanmean(f1)
-    
-    return f1, avg_f1
-f1, avg_f1 = f1_from_confusion(c_mat)
-print(avg_f1)
-#0.7326923449631165
+# _,f1 = plotting.confusion(xenium,"Annotation","C_scANVI_cell_type")
 #%%
 coordinates = xenium.obs[["x_centroid","y_centroid"]]
 coordinates = coordinates.astype(int)
 #%%
-full_df = utils.get_attention_xenium(w,node_encoder_rev, data,coordinates)
+full_df = utils.get_attention(w,node_encoder_rev, data,coordinates)
 
-# %%
+# # %%
 full_df.index = [str(x) for x in full_df.index]
 full_df = full_df.fillna(0)
 xenium.obs = xenium.obs.join(full_df)
@@ -241,7 +226,7 @@ xenium.obs = xenium.obs.join(full_df)
 # %%
 for col in full_df.columns:
     print(col)
-    utils.plot_xenium(xenium.obs.x_centroid, xenium.obs.y_centroid,
+    plotting.plot_xenium(xenium.obs.x_centroid, xenium.obs.y_centroid,
                 xenium.obs[col])
 
 # %%
