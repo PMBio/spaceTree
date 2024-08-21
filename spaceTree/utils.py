@@ -6,17 +6,29 @@ from torch_geometric.utils import remove_self_loops
 from tqdm import tqdm
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sparsemax import Sparsemax
-
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import label_binarize
+from sklearn.calibration import CalibratedClassifierCV
+from scipy.special import logsumexp
+from scipy.optimize import minimize
+# from sparsemax import Sparsemax
+def reverse_log_softmax(log_probs):
+    # log_probs are the log probabilities obtained from log_softmax
+    # To reverse, we need to exponentiate them first
+    probs = torch.exp(log_probs)
+    
+    # Recover logits by taking log of the probabilities and adding a constant
+    logits = torch.log(probs) + log_probs.sum(dim=1, keepdim=True)
+    return logits
 def get_results(pred, data, node_encoder_rev, node_encoder_ct, node_encoder_cl, activation = None):
     pred_clone = pred[:,:data.num_classes_clone-1]
     pred_cell_type = pred[:,data.num_classes_clone-1:]
     if activation == None:
         pred_clone = pred_clone.detach().cpu().numpy()
         pred_cell_type = pred_cell_type.detach().cpu().numpy()
-    elif activation == "sparsemax":
-        pred_clone = Sparsemax(dim = 1)(pred_clone).detach().cpu().numpy()
-        pred_cell_type = Sparsemax(dim = 1)(pred_cell_type).detach().cpu().numpy()
+    # elif activation == "sparsemax":
+    #     pred_clone = Sparsemax(dim = 1)(pred_clone).detach().cpu().numpy()
+    #     pred_cell_type = Sparsemax(dim = 1)(pred_cell_type).detach().cpu().numpy()
     elif activation == "softmax":
         pred_clone = np.exp(pred_clone.detach().cpu().numpy())
         pred_cell_type = np.exp(pred_cell_type.detach().cpu().numpy())
@@ -26,6 +38,93 @@ def get_results(pred, data, node_encoder_rev, node_encoder_ct, node_encoder_cl, 
     ct_res = pd.DataFrame(pred_cell_type[data.hold_out.detach().cpu().numpy()], index = cells_hold_out)
     ct_res.columns = [node_encoder_ct[x] for x in ct_res.columns]
     return(clone_res,ct_res)
+
+def get_results_all(pred, data, node_encoder_rev, node_encoder_ct, node_encoder_cl, activation = None):
+    pred_clone = pred[:,:data.num_classes_clone-1]
+    pred_cell_type = pred[:,data.num_classes_clone-1:]
+    if activation == None:
+        pred_clone = pred_clone.detach().cpu().numpy()
+        pred_cell_type = pred_cell_type.detach().cpu().numpy()
+    elif activation == "softmax":
+        pred_clone = np.exp(pred_clone.detach().cpu().numpy())
+        pred_cell_type = np.exp(pred_cell_type.detach().cpu().numpy())
+    elif activation == "raw":
+        pred_clone = reverse_log_softmax(pred_clone).detach().cpu().numpy()
+        pred_cell_type = reverse_log_softmax(pred_cell_type).detach().cpu().numpy()
+    cells_all =[node_encoder_rev[x] for x in range(data.x.size(0))]
+    clone_res = pd.DataFrame(pred_clone, index = cells_all)
+    clone_res.columns =[node_encoder_cl[x] for x in clone_res.columns]
+    clone_res["true"] = [node_encoder_cl[x] for x in data.y_clone.detach().cpu().numpy()]
+    ct_res = pd.DataFrame(pred_cell_type, index = cells_all)
+    ct_res.columns = [node_encoder_ct[x] for x in ct_res.columns]
+    ct_res["true"] = [node_encoder_ct[x] for x in data.y_type.detach().cpu().numpy()]
+    return(clone_res,ct_res)
+
+# def get_calibrated_results(pred, data, node_encoder_rev, node_encoder_ct, node_encoder_cl):
+#     res_clone,res_ct = get_results_all(pred, data, node_encoder_rev, node_encoder_ct,node_encoder_cl, activation="softmax")
+#     def calibrate(res, method = "isotonic"):
+#         train_set = res[res.true != "missing"]
+#         y_train = train_set.true
+#         x_train = train_set.drop(columns=["true"])
+#         val_set = res[res.true == "missing"]
+#         x_val = val_set.drop(columns=["true"])
+#         Y = label_binarize(y_train, classes=np.unique(y_train))
+#         logistic_models = []
+#         for i in range(Y.shape[1]):
+#             model = LogisticRegression(class_weight='balanced', max_iter=1000)
+#             model.fit(x_train, Y[:, i])
+#             calibrator = CalibratedClassifierCV(model, method=method, cv='prefit')
+#             calibrator.fit(x_train, Y[:, i])
+#             logistic_models.append(calibrator)
+#         calibrated_probs = np.zeros((x_val.shape[0], len(logistic_models)))
+#         for i, logistic_model in enumerate(logistic_models):
+#             calibrated_probs[:, i] = logistic_model.predict_proba(x_val)[:, 1]
+#         calibrated_probs /= calibrated_probs.sum(axis=1, keepdims=True)
+#         return pd.DataFrame(calibrated_probs, index=val_set.index, columns=np.unique(y_train))
+#     res_clone = calibrate(res_clone)
+#     res_ct = calibrate(res_ct)
+#     return(res_clone,res_ct)
+
+def get_calibrated_results(pred, data, node_encoder_rev, node_encoder_ct, node_encoder_cl,t):
+    res_clone,res_ct = get_results_all(pred, data, node_encoder_rev, node_encoder_ct,node_encoder_cl, activation="raw")
+    def calibrate(res,t):
+        res = res[res.true == "missing"]
+        idx = res.index
+        cols = res.columns[:-1]
+        res = res.drop(columns=["true"]).values
+        max_res = np.max(res, axis=1, keepdims=True)
+        probs = np.exp((res - max_res) / t)
+        probs = probs / np.sum(probs, axis=1, keepdims=True)
+        return pd.DataFrame(probs, index=idx, columns=cols)
+    res_clone = calibrate(res_clone,t)
+    res_ct = calibrate(res_ct,t)
+    return(res_clone,res_ct)
+
+def get_results_clone(pred, data, node_encoder_rev, node_encoder_cl, activation = None):
+    pred_clone = pred
+    if activation == None:
+        pred_clone = pred_clone.detach().cpu().numpy()
+    elif activation == "sparsemax":
+        pred_clone = Sparsemax(dim = 1)(pred_clone).detach().cpu().numpy()
+    elif activation == "softmax":
+        pred_clone = np.exp(pred_clone.detach().cpu().numpy())
+    cells_hold_out =[node_encoder_rev[x.item()] for x in data.hold_out]
+    clone_res = pd.DataFrame(pred_clone[data.hold_out.detach().cpu().numpy()], index = cells_hold_out)
+    clone_res.columns =[node_encoder_cl[x] for x in clone_res.columns]
+    return(clone_res)
+
+def get_results_type(pred, data, node_encoder_rev, node_encoder_ct, activation = None):
+    pred_cell_type = pred
+    if activation == None:
+        pred_cell_type = pred_cell_type.detach().cpu().numpy()
+    elif activation == "sparsemax":
+        pred_cell_type = Sparsemax(dim = 1)(pred_cell_type).detach().cpu().numpy()
+    elif activation == "softmax":
+        pred_cell_type = np.exp(pred_cell_type.detach().cpu().numpy())
+    cells_hold_out =[node_encoder_rev[x.item()] for x in data.hold_out]
+    ct_res = pd.DataFrame(pred_cell_type[data.hold_out.detach().cpu().numpy()], index = cells_hold_out)
+    ct_res.columns = [node_encoder_ct[x] for x in ct_res.columns]
+    return(ct_res)
 
 
 

@@ -203,6 +203,7 @@ def plot_spatial_general(
     adjust_text=False,
     plt_axis="off",
     axis_y_flipped=True,
+    axis_x_flipped=False,
     x_y_labels=("", ""),
     crop_x=None,
     crop_y=None,
@@ -361,6 +362,8 @@ def plot_spatial_general(
 
         if axis_y_flipped:
             ax.invert_yaxis()
+        if axis_x_flipped:
+            ax.invert_xaxis()
 
         if plt_axis == "off":
             for spine in ax.spines.values():

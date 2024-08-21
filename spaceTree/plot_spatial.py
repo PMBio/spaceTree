@@ -119,6 +119,7 @@ def plot_spatial_general(
     adjust_text=False,
     plt_axis="off",
     axis_y_flipped=True,
+    axis_x_flipped=False,
     x_y_labels=("", ""),
     crop_x=None,
     crop_y=None,
@@ -277,6 +278,8 @@ def plot_spatial_general(
 
         if axis_y_flipped:
             ax.invert_yaxis()
+        if axis_x_flipped:
+            ax.invert_xaxis()
 
         if plt_axis == "off":
             for spine in ax.spines.values():
@@ -292,28 +295,29 @@ def plot_spatial_general(
         weights = np.zeros(counts.shape)
 
         for c in c_ord:
-            min_color_intensity = counts[:, c].min()
-            max_color_intensity = np.min([np.quantile(counts[:, c], max_color_quantile), max_col[c]])
+
+            min_color_intensity = 0
+            max_color_intensity = counts.max()
 
             rgb_function = get_rgb_function(cmap=cmaps[c], min_value=min_color_intensity, max_value=max_color_intensity)
 
             color = rgb_function(counts[:, c])
             color[:, 3] = color[:, 3] * alpha_scaling
+            # norm = mpl.colors.Normalize(vmin=0, vmax=1)
 
             norm = mpl.colors.Normalize(vmin=min_color_intensity, vmax=max_color_intensity)
 
             if colorbar_position is not None:
                 cbar_ticks = [
-                    min_color_intensity,
-                    np.mean([min_color_intensity, max_color_intensity]),
-                    max_color_intensity,
+                    counts[:, c].min(),
+                    np.quantile(counts[:, c].max(), max_color_quantile),
                 ]
                 cbar_ticks = np.array(cbar_ticks)
 
                 if max_color_intensity > 13:
                     cbar_ticks = cbar_ticks.astype(np.int32)
                 else:
-                    cbar_ticks = cbar_ticks.round(2)
+                    cbar_ticks = cbar_ticks.round(1)
 
                 cbar = fig.colorbar(
                     mpl.cm.ScalarMappable(norm=norm, cmap=cmaps[c]),

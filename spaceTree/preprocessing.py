@@ -11,6 +11,7 @@ import matplotlib as mpl
 from .plotting import plot_xenium
 import os
 from sklearn.neighbors import NearestNeighbors
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
@@ -62,7 +63,7 @@ def run_scvi(adata, outdir = "data/interim/res_scvi.csv", highly_variable_genes 
 
     # Train the scVI model
     vae = scvi.model.SCVI(adata, n_layers=2, n_latent=30)
-    vae.train()
+    vae.train(devices = 1)
 
     # Get the latent representation of the cells
     adata.obsm["X_scVI"] = vae.get_latent_representation()
@@ -89,15 +90,15 @@ def run_scvi(adata, outdir = "data/interim/res_scvi.csv", highly_variable_genes 
     # Return the DataFrame
     return cell_source
 
-def record_edges(emb_rna, emb_spatial, n_neigb, edge_type):
+def record_edges(emb_rna, emb_spatial, n_neigb, edge_type, metric = "minkowski"):
     # Prepare the data and fit the nearest neighbors model on emb_spatial
     if edge_type == "sc2xen" or edge_type == "sc2vis":
-        nbrs = NearestNeighbors(n_neighbors=n_neigb, algorithm='auto').fit(emb_spatial.values)
+        nbrs = NearestNeighbors(n_neighbors=n_neigb, algorithm='auto', metric = metric).fit(emb_spatial.values)
         # Retrieve distances and indices of the n_neigb nearest neighbors in emb_spatial for each point in emb_rna
         distances, indices = nbrs.kneighbors(emb_rna.values)
     elif edge_type == "sc2sc":
         data = emb_rna.values
-        nbrs = NearestNeighbors(n_neighbors=n_neigb, algorithm='auto').fit(data)    
+        nbrs = NearestNeighbors(n_neighbors=n_neigb, algorithm='auto', metric = metric).fit(data)    
         distances, indices = nbrs.kneighbors(data)
     else:
         raise ValueError("edge_type must be either 'sc2xen' or 'sc2sc' or 'sc2vis'")
