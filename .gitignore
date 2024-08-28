@@ -96,4 +96,5 @@ logs/
 
 logs_*/
 *_logs/
+notebooks/lightning_logs/
 

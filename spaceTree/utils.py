@@ -11,6 +11,8 @@ from sklearn.preprocessing import label_binarize
 from sklearn.calibration import CalibratedClassifierCV
 from scipy.special import logsumexp
 from scipy.optimize import minimize
+from sklearn.model_selection import train_test_split
+
 # from sparsemax import Sparsemax
 def reverse_log_softmax(log_probs):
     # log_probs are the log probabilities obtained from log_softmax
@@ -320,3 +322,46 @@ def plot_metrics(stored_metrics):
 #         }
 
 
+
+def check_class_distributions(data, weight_clone, weight_type, norm_sim, no_diploid = False):
+    num_class_train = data.y_clone[data.train_mask].unique().shape[0]
+    num_class_total = len(data.y_clone.unique())
+    assert num_class_total -1 == num_class_train, f"""Number of *clone* classes in training set {num_class_train} is not
+    equal to total number of classes {num_class_total -1}"""
+    assert num_class_total -1 == len(weight_clone), "Number of *clone* classes is not equal to number of weights"
+    if no_diploid:
+        assert num_class_total -1 == norm_sim.shape[0]-1, "Number of *clone* classes is not equal to number of similarity scores"
+    else:
+        assert num_class_total -1 == norm_sim.shape[0], "Number of *clone* classes is not equal to number of similarity scores"
+
+    num_class_train = data.y_type[data.train_mask].unique().shape[0]
+    num_class_total = len(data.y_type.unique())
+    assert num_class_total -1 == num_class_train, "Number of *type* classes in training set is not equal to total number of classes"
+
+def compute_class_weights(y_train):
+    """Calculate class weights based on the class sample count."""
+    class_sample_count = np.array([len(np.where(y_train == t)[0]) for t in np.unique(y_train)])
+    return 1. / class_sample_count
+def balanced_split(data,hold_in, size = 0.5):
+    train_indices_type, test_indices_type, _, _ = train_test_split(
+        hold_in, 
+        data.y_type[hold_in], 
+        test_size=0.5, 
+        stratify=data.y_type[hold_in], 
+        random_state=42
+    )
+
+    # Then, within each of those splits, further split based on y_clone
+    train_indices_final, test_indices_final = [], []
+
+    for subset_indices in [train_indices_type, test_indices_type]:
+        train_subset, test_subset, _, _ = train_test_split(
+            subset_indices,
+            data.y_clone[subset_indices],
+            test_size=size,  # Adjust as needed
+            stratify=data.y_clone[subset_indices],
+            random_state=42
+        )
+        train_indices_final.extend(train_subset)
+        test_indices_final.extend(test_subset)
+    return train_indices_final, test_indices_final
