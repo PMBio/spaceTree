@@ -1194,23 +1194,3 @@ sc.pl.spatial(visium, color = ct_res.columns, ncols=3)
 ```python
 
 ```
-
-
-```python
-
-```
-
-
-```python
-from importlib import reload
-reload(utils)
-```
-
-
-    <module 'spaceTree.utils' from '/data/olga/anaconda3/envs/torch_gnn/lib/python3.10/site-packages/spaceTree/utils.py'>
-
-
-
-```python
-
-```
