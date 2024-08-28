@@ -1153,7 +1153,9 @@ visium.obs = visium.obs.join(clone_res).join(ct_res)
 ### 3.1: Clon mapping
 First we will visualize the clone mapping results and compare them to the histological annotation provided by the authors:
 <div style="text-align: left;">
-  <img src="../docs/histo.png" alt="histo" width="200"/>
+  <a href="https://raw.githubusercontent.com/PMBio/spaceTree/master/docs/histo.png" download>
+    <img src="https://raw.githubusercontent.com/PMBio/spaceTree/master/docs/histo.png" alt="histo" width="200"/>
+  </a>
 </div>
 (note that the images are not fully overlapping)
 
@@ -1171,7 +1173,9 @@ sc.pl.spatial(visium, color = clone_res.columns, ncols=2)
 We can see that invasive tumor alligns with clone 0, DCIS 1 with clone 2, DCIS 2 with clone 3 (top part) and 4 (right part).
 Interestingly, that DCIS 2 was separated into two clones with distinct spatial locations. Indeed, despite being classified as a single DCIS, those clones have distinct CNV patterns (e.g. chr3 and chr19):
 <div style="text-align: left;">
-  <img src="cnv_map.png" alt="histo" width="2000"/>
+  <a href="https://raw.githubusercontent.com/PMBio/spaceTree/master/docs/cnv_map.png" download>
+    <img src="https://raw.githubusercontent.com/PMBio/spaceTree/master/docs/cnv_map.png" alt="histo" width="2000"/>
+  </a>
 </div>
 
 (the image is taken from `../docs//infercnv_run.ipynb`)
