@@ -1153,7 +1153,7 @@ visium.obs = visium.obs.join(clone_res).join(ct_res)
 ### 3.1: Clon mapping
 First we will visualize the clone mapping results and compare them to the histological annotation provided by the authors:
 <div style="text-align: left;">
-  <img src="histo.png" alt="histo" width="200"/>
+  <img src="../docs/histo.png" alt="histo" width="200"/>
 </div>
 (note that the images are not fully overlapping)
 
@@ -1174,7 +1174,7 @@ Interestingly, that DCIS 2 was separated into two clones with distinct spatial l
   <img src="cnv_map.png" alt="histo" width="2000"/>
 </div>
 
-(the image is taken from `notebooks/infercnv_run.ipynb`)
+(the image is taken from `../docs//infercnv_run.ipynb`)
 
 ### 3.2: Cell type mapping
  We can also visualise the cell type mapping to confirm that the results allign with the original publication:
