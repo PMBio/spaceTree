@@ -11,7 +11,10 @@ Create conda environment and install dependencies:
 
 ```bash
 conda create -y -n spacetree_env python=3.9
+# cd in the spaceTree directory
+cd spaceTree
 conda activate spacetree_env
+pip install .
 ```
 Finally, to use this environment in jupyter notebook, add jupyter kernel for this environment:
 

@@ -96,5 +96,3 @@ logs/
 logs_*/
 *_logs/
 
-# Notebooks
-notebooks/
