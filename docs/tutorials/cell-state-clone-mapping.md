@@ -1,3 +1,9 @@
+---
+title: "Cell State and Clone Mapping to 10x Visium with spaceTree"
+nav_order: 1
+parent: Tutorials
+---
+
 # Cell State and Clone Mapping to 10x Visium with spaceTree
 
 This tutorial is based on public data from Janesick et al. 2023: [High resolution mapping of the tumor microenvironment using integrated single-cell, spatial and in situ analysis](https://www.nature.com/articles/s41467-023-43458-x).
@@ -102,7 +108,7 @@ sc.pl.spatial(visium)
 
 
     
-![png](cell-state-clone-mapping_files/cell-state-clone-mapping_9_0.png)
+![png](cell-state-clone-mapping_files/cell-state-clone-mapping_10_0.png)
     
 
 
@@ -133,7 +139,7 @@ cell_source = pp.run_scvi(adata, "../data/res_scvi.csv")
 
 
     
-![png](cell-state-clone-mapping_files/cell-state-clone-mapping_11_4.png)
+![png](cell-state-clone-mapping_files/cell-state-clone-mapping_12_4.png)
     
 
 
@@ -296,16 +302,24 @@ edges_sc2vis = pp.record_edges(emb_spatial, emb_rna,10, "sc2vis")
 # checking where we have the highest distance to refrence data as those might be potentially problematic spots for mapping
 pp.show_weights_distribution(edges_sc2vis,visium, 'visium')
 edges_sc2vis = pp.normalize_edge_weights(edges_sc2vis)
-#%%
+
 print("2. Recording edges between RNA embeddings...")
 # 10 here is the number of neighbors to be considered
 edges_sc2sc = pp.record_edges(emb_rna,emb_rna, 10, "sc2sc")
 edges_sc2sc = pp.normalize_edge_weights(edges_sc2sc)
+```
 
-#%%
+Now that we are creating edge list for spatial data, please notice that we use `pp.create_edges_for_visium_nodes` function.
+This function constructs an edge list based on a 5 by 5 grid and it works well for standard Visium data and we also tested it for Visium HD. 
+If you want to use a KNN graph instead, you can run `pp.create_edges_for_xenium_nodes_global`. This will create a KNN graph based on pre-defined `k`.
+If you want a more detailed tutorial tailored to Xenium data, please refer to the [Xenium tutorial](tutorials/cell-state-clone-mapping-xenium.md).
+
+
+
+```python
 print("3. Creating edges for Visium nodes...")
 edges_vis2grid = pp.create_edges_for_visium_nodes(visium)
-#%%
+
 print("4. Saving edges and embeddings...")
 edges = pd.concat([edges_sc2vis, edges_sc2sc, edges_vis2grid])
 edges.node1 = edges.node1.astype(str)
@@ -319,7 +333,7 @@ pp.save_edges_and_embeddings(edges, emb_spatial, emb_rna, outdir ="../data/tmp/"
 
 
     
-![png](cell-state-clone-mapping_files/cell-state-clone-mapping_17_1.png)
+![png](cell-state-clone-mapping_files/cell-state-clone-mapping_20_1.png)
     
 
 
@@ -1166,7 +1180,7 @@ sc.pl.spatial(visium, color = clone_res.columns, ncols=2)
 
 
     
-![png](cell-state-clone-mapping_files/cell-state-clone-mapping_55_0.png)
+![png](cell-state-clone-mapping_files/cell-state-clone-mapping_58_0.png)
     
 
 
@@ -1190,7 +1204,7 @@ sc.pl.spatial(visium, color = ct_res.columns, ncols=3)
 
 
     
-![png](cell-state-clone-mapping_files/cell-state-clone-mapping_58_0.png)
+![png](cell-state-clone-mapping_files/cell-state-clone-mapping_61_0.png)
     
 
 

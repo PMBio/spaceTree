@@ -1,3 +1,36 @@
-theme: jekyll-theme-cayman
-title: spaceTree documentation
-description: spaceTree documentation and tutorials
+title: spaceTree Documentation
+remote_theme: pmarsceill/just-the-docs
+
+# Optional settings
+search_enabled: true
+search_tokenizer_separator: /[\s/]+/
+search_preview_length: 15
+search_result_path: /search/
+
+# Site settings
+logo: space_tree.png
+description: >- # this means to ignore newlines until "baseurl:"
+  Welcome to the official documentation for spaceTree! Here, you will find tutorials and guides to help you get started and make the most out of our tool.
+baseurl: "/docs" # the subpath of your site, e.g. /blog
+url: "https://pmbio.github.io/spaceTree" # the base hostname & protocol for your site
+
+# Navigation configuration
+just_the_docs:
+  logo: "space_tree.png"
+  logo_alt: "spacetree logo"
+  aux_links:
+    GitHub:
+      - "https://github.com/PMBio/spaceTree"
+
+# Sidebar navigation
+nav:
+  - title: "Home"
+    url: "/"
+  - title: "Installation"
+    url: "/installation"
+  - title: "Tutorials"
+    children:
+      - title: "Visium/grid-based data"
+        url: "/tutorials/cell-state-clone-mapping"
+      - title: "Xenium data"
+        url: "/tutorials/cell-state-clone-mapping-xenium"
