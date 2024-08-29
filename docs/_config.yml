@@ -14,17 +14,20 @@ description: >-
 baseurl: "/spaceTree"  # The subpath of your site (relative to the domain root)
 url: "https://pmbio.github.io" # The base hostname & protocol for your site
 
+# Auxillary links configuration
+aux_links:
+  "View on GitHub":
+    - url: "https://github.com/PMBio/spaceTree"
+    - icon: "fab fa-github"  # Optional: Adds a GitHub icon
+
+# Show edit links on GitHub
+show_edit_on_github: true
+aux_links_new_tab: false
+
 # Navigation settings for Just the Docs
 just_the_docs:
   logo: "space_tree.png"
   logo_alt: "spacetree logo"
-  aux_links:
-    "View on GitHub":
-      url: "//github.com/PMBio/spaceTree"
-      icon: "fab fa-github"  # Optional: Adds a GitHub icon
-  show_edit_on_github: true
-  aux_links_new_tab: false
-
 
 # Sidebar navigation configuration
 nav:
@@ -38,3 +41,4 @@ nav:
         url: "/spaceTree/tutorials/cell-state-clone-mapping"
       - title: "Xenium data"
         url: "/spaceTree/tutorials/cell-state-clone-mapping-xenium"
+  - title: "API Reference"
