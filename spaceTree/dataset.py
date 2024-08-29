@@ -10,11 +10,35 @@ import os
 from collections import Counter
 import pickle   
 def validate_counts(counter, threshold, label):
+    """
+    Validates the counts in a counter dictionary against a threshold.
+
+    Args:
+        counter (collections.Counter): The counter dictionary containing the counts.
+        threshold (int): The minimum count threshold.
+        label (str): The label to be used in the assertion error message.
+
+    Raises:
+        AssertionError: If any count in the counter dictionary is less than the threshold.
+
+    """
     for key, value in counter.items():
         assert value > threshold, f"{label} {key} has less than {threshold + 1} items"
         
 
-def filter_and_encode(df, node_encoder, all_nodes,use_index=False):
+def filter_and_encode(df, node_encoder, all_nodes, use_index=False):
+    """
+    Filters and encodes the given DataFrame based on the provided node encoder and all nodes.
+
+    Args:
+        df (pandas.DataFrame): The DataFrame to be filtered and encoded.
+        node_encoder (dict): A dictionary mapping node IDs to encoded values.
+        all_nodes (list): A list of all node IDs.
+        use_index (bool, optional): Whether to filter based on DataFrame index. Defaults to False.
+
+    Returns:
+        pandas.DataFrame: The filtered and encoded DataFrame.
+    """
     if use_index:
         df = df[df.index.isin(all_nodes)]
         df = df.rename(index=node_encoder)
@@ -25,19 +49,41 @@ def filter_and_encode(df, node_encoder, all_nodes,use_index=False):
 
     return df
 
-def drop_small(edges,numb):
+def drop_small(edges, numb):
+    """
+    Drop clones and cell types with less than 'numb' cells from the edges dataframe.
+
+    Parameters:
+    edges (DataFrame): The dataframe containing the edges information.
+    numb (int): The minimum number of cells required for a clone or cell type to be included.
+
+    Returns:
+    DataFrame: The modified edges dataframe with small clones and cell types dropped.
+    """
     cl_dict = Counter(edges[["node1","clone"]].drop_duplicates().clone)
-    clones_exc = [key for key in cl_dict if cl_dict[key]<=numb]
+    clones_exc = [key for key in cl_dict if cl_dict[key] <= numb]
     print(f"Excluding {len(clones_exc)} clones with less than {numb} cells")
     ct_dict = Counter(edges[["node1","cell_type"]].drop_duplicates().cell_type)
-    ct_exc = [key for key in ct_dict if ct_dict[key]<=numb]
+    ct_exc = [key for key in ct_dict if ct_dict[key] <= numb]
     print(f"Excluding {len(ct_exc)} cell types with less than {numb} cells")
     edges = edges[~edges.clone.isin(clones_exc)]
     edges = edges[~edges.cell_type.isin(ct_exc)]
     edges = edges[~edges.node2.isin(set(edges.node2).difference(set(edges.node1)))]
-    return(edges)
+    return edges
 
 def preprocess_data(edges, overcl, spatial_edges, grid_edges):
+    """
+    Preprocesses the given data by filtering and filling missing values.
+
+    Args:
+        edges (DataFrame): The edges data.
+        overcl (DataFrame): The annotation data with clone and cell type labels.
+        spatial_edges (str): The type of spatial edges.
+        grid_edges (str): The type of grid edges.
+
+    Returns:
+        Tuple[DataFrame, DataFrame]: The preprocessed edges and overcl data.
+    """
     # Filter and fill missing values
     overcl = overcl.merge(edges[edges["type"] != spatial_edges], on="node1", how="left")
     overcl = overcl[["node1", "clone", "cell_type"]].drop_duplicates()    
@@ -51,6 +97,20 @@ def preprocess_data(edges, overcl, spatial_edges, grid_edges):
 
 
 def read_and_merge_embeddings(paths, edges, drop_less = 10):
+    """
+    Read and merge the embeddings from spatial and RNA datasets.
+
+    Parameters:
+    - paths (dict): A dictionary containing the file paths for the spatial and RNA datasets.
+    - edges (pd.DataFrame): A DataFrame containing the edges of the graph.
+    - drop_less (int): The minimum number of occurrences required for an edge to be kept.
+
+    Returns:
+    - emb_vis (pd.DataFrame): The merged embeddings from the spatial dataset.
+    - emb_rna (pd.DataFrame): The merged embeddings from the RNA dataset.
+    - edges (pd.DataFrame): The filtered edges of the graph.
+    - node_encoder (dict): A dictionary mapping node IDs to encoded node IDs.
+    """
     all_nodes_graph = set(edges.node1).union(set(edges.node2))
     emb_vis = pd.read_csv(paths["spatial"], index_col=0)
     emb_vis.index = emb_vis.index.map(str)
@@ -73,7 +133,25 @@ def read_and_merge_embeddings(paths, edges, drop_less = 10):
     return emb_vis, emb_rna, edges, node_encoder
 
 
-def create_data_object(edges, emb_vis, emb_rna,node_encoder, sim = None, with_diploid = True):
+def create_data_object(edges, emb_vis, emb_rna, node_encoder, sim=None, with_diploid=True):
+    """
+    Create a data object for graph neural network training.
+
+    Args:
+        edges (pandas.DataFrame): DataFrame containing the edges of the graph.
+        emb_vis (pandas.DataFrame): DataFrame containing the spatial embeddings.
+        emb_rna (pandas.DataFrame): DataFrame containing the RNA embeddings.
+        node_encoder (dict): Dictionary mapping node IDs to their corresponding encodings.
+        sim (pandas.DataFrame, optional): Similarity matrix between clone values. Defaults to None.
+        with_diploid (bool, optional): Flag indicating whether to include diploid values in the encoding. Defaults to True.
+
+    Returns:
+        tuple: A tuple containing the data object and dictionaries for node, clone, and cell type encodings.
+               If `sim` is provided, an additional similarity matrix is returned.
+
+    Raises:
+        AssertionError: If the data object is not valid or the shapes of the data arrays are not consistent.
+    """
     # Convert to tensors
     edge_index = torch.tensor([edges.node1.values, edges.node2.values], dtype=torch.long)
     edge_weight = torch.tensor(edges.weight.values, dtype=torch.float)
@@ -106,17 +184,28 @@ def create_data_object(edges, emb_vis, emb_rna,node_encoder, sim = None, with_di
     clone_vals = list(clone_dict.keys())
     clone_vals.remove("missing")
     if sim is not None:
-        sim = sim.loc[clone_vals,clone_vals]
-        sim = sim.rename(index = clone_dict,columns =clone_dict)
+        sim = sim.loc[clone_vals, clone_vals]
+        sim = sim.rename(index=clone_dict, columns=clone_dict)
         s = sorted(sim.columns)
-        sim = sim.loc[s,s].values
-        return data, {"nodes": node_encoder, "clones": clone_dict, "types": type_dict},sim
+        sim = sim.loc[s, s].values
+        return data, {"nodes": node_encoder, "clones": clone_dict, "types": type_dict}, sim
     else:
         return data, {"nodes": node_encoder, "clones": clone_dict, "types": type_dict}
 
 
 
 def create_encoding_dict(df, column, extras=[]):
+    """
+    Create a dictionary that maps unique values in a column of a DataFrame to their corresponding indices.
+
+    Parameters:
+        df (pandas.DataFrame): The DataFrame containing the column.
+        column (str): The name of the column.
+        extras (list, optional): Additional values to exclude from the dictionary.
+
+    Returns:
+        dict: A dictionary mapping unique values to their corresponding indices.
+    """
     items = list(df[column].unique())
     for extra in extras:
         items.remove(extra)
@@ -127,6 +216,5 @@ def create_encoding_dict(df, column, extras=[]):
     else:
         dt = {item: idx for idx, item in enumerate(items)}
         dt["missing"] = -1
-
 
     return dt
