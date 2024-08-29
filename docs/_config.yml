@@ -20,8 +20,11 @@ just_the_docs:
   logo_alt: "spacetree logo"
   aux_links:
     "View on GitHub":
-      url: "https://github.com/PMBio/spaceTree"
+      url: "//github.com/PMBio/spaceTree"
       icon: "fab fa-github"  # Optional: Adds a GitHub icon
+  show_edit_on_github: true
+  aux_links_new_tab: false
+
 
 # Sidebar navigation configuration
 nav:
