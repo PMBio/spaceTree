@@ -8,10 +8,10 @@ search_preview_length: 15
 search_result_path: /search/
 
 # Site settings
-logo: "space_tree.png"  # Make sure this logo file is in the correct path, or provide the full URL
+logo: "space_tree.png"  # Ensure this path is correct
 description: >- 
   Welcome to the official documentation for spaceTree! Here, you will find tutorials and guides to help you get started and make the most out of our tool.
-baseurl: "/spaceTree"  # The subpath of your site (relative to the domain root). Adjust if needed.
+baseurl: "/spaceTree"  # The subpath of your site (relative to the domain root)
 url: "https://pmbio.github.io" # The base hostname & protocol for your site
 
 # Navigation settings for Just the Docs
@@ -19,13 +19,13 @@ just_the_docs:
   logo: "space_tree.png"
   logo_alt: "spacetree logo"
   aux_links:
-    GitHub: 
-      - "https://github.com/PMBio/spaceTree"
+    "View on GitHub":
+      - "https://github.com/PMBio/spaceTree"  # Link to your GitHub repository
 
 # Sidebar navigation configuration
 nav:
   - title: "Home"
-    url: "/spaceTree/"  # Ensure this points to the root of your GitHub Pages site
+    url: "/spaceTree/"
   - title: "Installation"
     url: "/spaceTree/installation"
   - title: "Tutorials"
