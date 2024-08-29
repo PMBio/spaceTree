@@ -39,6 +39,8 @@ nav:
         url: "/spaceTree/tutorials/cell-state-clone-mapping"
       - title: "Xenium data"
         url: "/spaceTree/tutorials/cell-state-clone-mapping-xenium"
+      - title: "Visium HD tips and tricks"
+        url: "/spaceTree/tutorials/visium-hd"
 nav_external_links:
   - title: View on GitHub
     url: https://github.com/PMBio/spaceTree
@@ -52,4 +54,4 @@ gh_edit_link_text: "Edit this page on GitHub"
 gh_edit_repository: "https://github.com/PMBio/spaceTree" # the github URL for your repo
 gh_edit_branch: "main" # the branch that your docs is served from
 # gh_edit_source: docs # the source that your files originate from
-gh_edit_view_mode: "tree" # "tree" or "edit" if you want the user to jump into the editor immediately
+gh_edit_view_mode: "edit" # "tree" or "edit" if you want the user to jump into the editor immediately

@@ -291,11 +291,6 @@ cell_source.head()
 
 
 ```python
-visium.obs = visium.obs.drop(columns=["weight"])
-```
-
-
-```python
 print("1. Recording edges between RNA and spatial embeddings...")
 # 10 here is the number of neighbors to be considered
 edges_sc2vis = pp.record_edges(emb_spatial, emb_rna,10, "sc2vis")
@@ -333,7 +328,7 @@ pp.save_edges_and_embeddings(edges, emb_spatial, emb_rna, outdir ="../data/tmp/"
 
 
     
-![png](cell-state-clone-mapping_files/cell-state-clone-mapping_20_1.png)
+![png](cell-state-clone-mapping_files/cell-state-clone-mapping_19_1.png)
     
 
 
@@ -713,14 +708,14 @@ edges_enc.head()
 
 ```python
 #make sure that weight is a float
-edges.weight = edges.weight.astype(float)
+edges_enc.weight = edges_enc.weight.astype(float)
 
 ```
 
 
 ```python
 #Finally creating a pytorch dataset object and a dictionaru that will be used for decoding the data
-data, encoding_dict = dataset.create_data_object(edges, emb_vis_nodes, emb_rna_nodes, node_encoder)
+data, encoding_dict = dataset.create_data_object(edges_enc, emb_vis_nodes, emb_rna_nodes, node_encoder)
 
 ```
 
@@ -1180,7 +1175,7 @@ sc.pl.spatial(visium, color = clone_res.columns, ncols=2)
 
 
     
-![png](cell-state-clone-mapping_files/cell-state-clone-mapping_58_0.png)
+![png](cell-state-clone-mapping_files/cell-state-clone-mapping_57_0.png)
     
 
 
@@ -1204,7 +1199,7 @@ sc.pl.spatial(visium, color = ct_res.columns, ncols=3)
 
 
     
-![png](cell-state-clone-mapping_files/cell-state-clone-mapping_61_0.png)
+![png](cell-state-clone-mapping_files/cell-state-clone-mapping_60_0.png)
     
 
 

@@ -80,6 +80,7 @@ data/Chromium_FFPE_Human_Breast_Cancer_Chromium_FFPE_Human_Breast_Cancer_count_s
 data/CytAssist_FFPE_Human_Breast_Cancer_filtered_feature_bc_matrix.h5
 data/spatial/
 data/tmp/
+data/outs/
 
 # Mac OS-specific storage files
 .DS_Store

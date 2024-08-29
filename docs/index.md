@@ -20,6 +20,8 @@ cd spaceTree
 conda activate spacetree_env
 pip install .
 ```
+TBD: pip/conda pachages will be available soon.
+
 Finally, to use this environment in jupyter notebook, add jupyter kernel for this environment:
 
 
@@ -40,6 +42,9 @@ For Visium/grid-based data:
 For Xenium data, please refer to:
 - [Cell state and clone mapping to 10x Xenium with spaceTree](tutorials/cell-state-clone-mapping-xenium.md)
 
+We do not provide a separate tutorial for Visium HD data, as the workflow is the same as for Visium data. However, we provide some tips and tricks for working with Visium HD data [here](tutorials/visium-hd.md).
+
 If you need help defining clones based on your own scRNA-seq data, you can use tools such as [inferCNV](https://github.com/broadinstitute/inferCNV/wiki), [inferCNVpy](https://infercnvpy.readthedocs.io/en/latest/tutorials.html), [copyKAT](https://github.com/navinlabcode/copykat) and others.
 
 For the sake of the Visium and Xenium tutorials, we also show how we ran the clone inference based on inferCNVpy [here](https://github.com/PMBio/spaceTree/blob/master/notebooks/infercnv_run.ipynb)
+
