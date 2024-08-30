@@ -2,14 +2,13 @@ title: "spaceTree Documentation"
 remote_theme: pmarsceill/just-the-docs
 
 # Optional settings for the theme
-search_enabled: true
+search_enabled: false
 search_tokenizer_separator: /[\s/]+/
 search_preview_length: 15
 search_result_path: /search/
 
 # Site settings
 logo: "space_tree.png"  # Ensure this path is correct
-logo_size: 200 # Increase the logo size to 200 pixels
 description: >- 
   Welcome to the official documentation for spaceTree! Here, you will find tutorials and guides to help you get started and make the most out of our tool.
 baseurl: "/spaceTree"  # The subpath of your site (relative to the domain root)
