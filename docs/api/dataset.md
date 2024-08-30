@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Dataset API"
+title: "Dataset creation"
 parent: API Reference
 nav_order: 3
 ---

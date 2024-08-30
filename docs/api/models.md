@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Models API"
+title: "spaceTree model"
 parent: API Reference
 nav_order: 1
 ---

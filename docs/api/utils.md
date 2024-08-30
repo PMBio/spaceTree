@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "utils API"
+title: "Utilities"
 parent: API Reference
 nav_order: 4
 ---

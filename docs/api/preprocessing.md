@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Preprocessing API"
+title: "Data preprocessing"
 parent: API Reference
 nav_order: 2
 ---
