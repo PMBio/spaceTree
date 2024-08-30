@@ -1,0 +1,6 @@
+/* custom.css */
+.navbar-brand img {
+  max-height: 200%; /* Adjust the height to 2x the original size */
+  width: auto; /* Keep the aspect ratio */
+}
+
