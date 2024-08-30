@@ -8,10 +8,9 @@ from scipy.spatial import distance
 import scvi
 from scvi.model.utils import mde
 import matplotlib as mpl
-from .plotting import plot_xenium
+from spaceTree.plotting import plot_xenium
 import os
 from sklearn.neighbors import NearestNeighbors
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
@@ -30,6 +29,8 @@ def run_scvi(adata, outdir = "data/interim/res_scvi.csv", highly_variable_genes 
     Parameters:
     adata (anndata.AnnData): Input AnnData object with gene expression data.
     outdir (str): Output directory to save the resulting DataFrame.
+    highly_variable_genes (bool): Flag indicating whether to identify highly variable genes.
+    plot_extra (list): List of additional variables to include in the visualization.
 
     Returns:
     pandas.DataFrame: DataFrame with cell embeddings and source labels.
@@ -91,6 +92,20 @@ def run_scvi(adata, outdir = "data/interim/res_scvi.csv", highly_variable_genes 
     return cell_source
 
 def record_edges(emb_rna, emb_spatial, n_neigb, edge_type, metric = "minkowski"):
+    """
+    Create edges between nodes based on nearest neighbors.
+
+    Parameters:
+    emb_rna (pd.DataFrame): DataFrame containing RNA embeddings.
+    emb_spatial (pd.DataFrame): DataFrame containing spatial embeddings.
+    n_neigb (int): Number of nearest neighbors to consider.
+    edge_type (str): Type of edge to create. Must be either 'sc2xen', 'sc2sc', or 'sc2vis'.
+    metric (str, optional): Distance metric to use. Defaults to 'minkowski'.
+
+    Returns:
+    pd.DataFrame: DataFrame containing the edges with columns 'node1', 'node2', 'weight', and 'type'.
+    """
+
     # Prepare the data and fit the nearest neighbors model on emb_spatial
     if edge_type == "sc2xen" or edge_type == "sc2vis":
         nbrs = NearestNeighbors(n_neighbors=n_neigb, algorithm='auto', metric = metric).fit(emb_spatial.values)
@@ -118,6 +133,15 @@ def record_edges(emb_rna, emb_spatial, n_neigb, edge_type, metric = "minkowski")
 
     return edges_df
 def show_weights_distribution(edges, spatial, spatial_type = "visium", library_id = None):
+    """
+    Display the distribution of weights for each node in a spatial dataset.
+
+    Parameters:
+    edges (pandas.DataFrame): DataFrame containing the edges information.
+    spatial (anndata.AnnData): Annotated data matrix containing the spatial dataset.
+    spatial_type (str, optional): Type of spatial dataset. Defaults to "visium".
+    library_id (str, optional): ID of the library. Defaults to None.
+    """
     top_match = edges[["node2","weight"]].groupby("node2").min()
     spatial.obs = spatial.obs.join(top_match)
     if spatial_type == "visium":
@@ -160,83 +184,48 @@ def convert_array_row_col_to_int(visium):
     return visium
 
 def create_edges_for_visium_nodes(visium):
+    """
+    Create edges between Visium nodes based on their spatial proximity.
+
+    Args:
+        visium (DataFrame): DataFrame containing Visium data.
+
+    Returns:
+        DataFrame: DataFrame containing the edges between Visium nodes.
+            The DataFrame has columns "node1", "node2", "weight", and "type".
+    """
     vis_nodes = visium.obs.index
     edges_vis = []
     for node in tqdm(vis_nodes):
-        x= visium.obs.loc[node].array_row
-        y= visium.obs.loc[node].array_col
-        tmp = visium.obs[(visium.obs.array_row >=x-2)&(visium.obs.array_row <=x+2)&(visium.obs.array_col <=y+2)&(visium.obs.array_col >=y-2)].copy()
-        tmp.loc[:,"degree"] = 2
-        tmp.loc[(tmp.array_row >=x-1)&(tmp.array_row <=x+1)&(tmp.array_col <=y+1)&(tmp.array_col >=y-1),"degree"] = 1
+        x = visium.obs.loc[node].array_row
+        y = visium.obs.loc[node].array_col
+        tmp = visium.obs[(visium.obs.array_row >= x-2) & (visium.obs.array_row <= x+2) & (visium.obs.array_col <= y+2) & (visium.obs.array_col >= y-2)].copy()
+        tmp.loc[:, "degree"] = 2
+        tmp.loc[(tmp.array_row >= x-1) & (tmp.array_row <= x+1) & (tmp.array_col <= y+1) & (tmp.array_col >= y-1), "degree"] = 1
         nodes1 = tmp[tmp.degree == 1].index
         for n in nodes1:
             if n != node:
-                edges_vis.append([node,n, 1])
+                edges_vis.append([node, n, 1])
         nodes2 = tmp[tmp.degree == 2].index
         for n in nodes2:
-            edges_vis.append([node,n, 0.5])
+            edges_vis.append([node, n, 0.5])
     edges_vis = pd.DataFrame(edges_vis, columns=["node1", "node2", "weight"])
     edges_vis["type"] = "vis2grid"
     return edges_vis
-def create_edges_for_xenium_nodes(xenium, d=20):
-    # Extract centroids
-    centroids = xenium.obs[["x_centroid", "y_centroid"]].values
-    node_list = xenium.obs.index.values
-    
-    # NearestNeighbors search
-    nbrs = NearestNeighbors(n_neighbors=centroids.shape[0], algorithm='auto').fit(centroids)
-    distances, indices = nbrs.kneighbors(centroids)
-    
-    # Find the min and max distances for normalization
-    min_distances = distances[:, 0].reshape(-1, 1)
-    max_distances = distances[:, -1].reshape(-1, 1)
-    
-    # Extract the top d distances and indices
-    top_d_distances = distances[:, :d+1]
-    top_d_indices = indices[:, :d+1]
 
-    # Normalize the top d distances
-    norm_values = 1 - (top_d_distances - min_distances) / (max_distances - min_distances)
-
-    # Create edges
-    node1 = np.repeat(node_list, d+1).reshape(-1, 1)
-    node2 = node_list[top_d_indices].reshape(-1, 1)
-    weights = norm_values.reshape(-1, 1)
-    distances_array = np.full(weights.shape, d)
-    
-    edges_xen = np.hstack((node1, node2, weights, distances_array))
-    edges_xen_df = pd.DataFrame(edges_xen, columns=["node1", "node2", "weight", "distance"])
-    edges_xen_df["type"] = "xen2grid"
-
-    return edges_xen_df
-
-def create_edges_for_xenium_nodes_fast(xenium, d=20):
-    # Extract centroids
-    centroids = xenium.obs[["x_centroid", "y_centroid"]].values
-    node_list = xenium.obs.index.values
-    
-    # NearestNeighbors search
-    nbrs = NearestNeighbors(n_neighbors=d+1, algorithm='auto').fit(centroids)  # +1 for the self-loop
-    distances, indices = nbrs.kneighbors(centroids)
-    
-    # Normalize distances
-    # No need to drop the first column for self-loops
-    min_distances = distances[:, 0].reshape(-1, 1)  # This is always 0 for self-loops
-    max_distances = distances[:, -1].reshape(-1, 1)
-    norm_values = 1 - (distances - min_distances) / (max_distances - min_distances)
-
-    # Create edges
-    node1 = np.repeat(node_list, d+1).reshape(-1, 1)  # +1 for the self-loop
-    node2 = node_list[indices].reshape(-1, 1)
-    weights = norm_values.reshape(-1, 1)
-    distances_array = np.full(weights.shape, d+1)  # +1 for the self-loop
-    
-    edges_xen = np.hstack((node1, node2, weights, distances_array))
-    edges_xen_df = pd.DataFrame(edges_xen, columns=["node1", "node2", "weight", "distance"])
-    edges_xen_df["type"] = "xen2grid"
-
-    return edges_xen_df
 def create_edges_for_xenium_nodes_global(xenium, percentile=1, sample_size=1000):
+    """
+    Create edges between xenium nodes based on their centroids.
+
+    Parameters:
+    - xenium (object): The xenium object containing the node data.
+    - percentile (float): The percentile value used to determine the distance threshold.
+    - sample_size (int): The size of the sample used to estimate the distance threshold.
+
+    Returns:
+    - edges_xen_df (DataFrame): A DataFrame containing the edges between xenium nodes, along with their weights, distance threshold, and type.
+    """
+
     # Extract centroids
     centroids = xenium.obs[["x_centroid", "y_centroid"]].values
     node_list = xenium.obs.index.values
@@ -281,6 +270,16 @@ def create_edges_for_xenium_nodes_global(xenium, percentile=1, sample_size=1000)
     return edges_xen_df
 
 def save_edges_and_embeddings(edges, emb_spatial, emb_rna, outdir = "data/interim/",suffix = ""):
+    """
+    Save the edges, spatial embeddings, and RNA embeddings to CSV files.
+
+    Parameters:
+    edges (DataFrame): DataFrame containing the edges.
+    emb_spatial (DataFrame): DataFrame containing the spatial embeddings.
+    emb_rna (DataFrame): DataFrame containing the RNA embeddings.
+    outdir (str): Directory to save the CSV files. Default is "data/interim/".
+    suffix (str): Suffix to add to the CSV file names. Default is an empty string.
+    """
     edges.to_csv(f"{outdir}edges_{suffix}.csv")
     emb_spatial.to_csv(f"{outdir}embedding_spatial_{suffix}.csv")
     emb_rna.to_csv(f"{outdir}embedding_rna_{suffix}.csv")
