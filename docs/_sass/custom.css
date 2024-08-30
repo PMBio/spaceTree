@@ -1,6 +1,5 @@
-/* custom.css */
+/* assets/css/custom.css */
 .navbar-brand img {
-  max-height: 200%; /* Adjust the height to 2x the original size */
+  height: 100px; /* Adjust to desired height */
   width: auto; /* Keep the aspect ratio */
 }
-

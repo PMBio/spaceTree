@@ -26,10 +26,9 @@ aux_links_new_tab: true
 just_the_docs:
   logo: "space_tree.png"
   logo_alt: "spacetree logo"
+  logo_size: "500px" # Add the desired size of the logo here
 
-  # Include custom styles
-  custom_css:
-    - _sass/custom.css
+
 
 # Sidebar navigation configuration
 nav:

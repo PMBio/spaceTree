@@ -4,6 +4,8 @@ title: "Welcome to spaceTree's Documentation"
 nav_order: 1
 ---
 
+# Welcome to spaceTree's Documentation
+
 Welcome to the official documentation for spaceTree! Here, you will find tutorials and guides to help you get started and make the most out of our tool.
 
 ### Installation
