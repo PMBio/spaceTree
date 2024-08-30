@@ -2,7 +2,7 @@ title: "spaceTree Documentation"
 remote_theme: pmarsceill/just-the-docs
 
 # Optional settings for the theme
-search_enabled: false
+search_enabled: true
 search_tokenizer_separator: /[\s/]+/
 search_preview_length: 15
 search_result_path: /search/
