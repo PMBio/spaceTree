@@ -1,3 +1,9 @@
+---
+layout: default
+title: tutorials
+nav_order: 2
+has_children: true
+---
 # Tutorials
 
 Welcome to the tutorials section. Here, you can find various guides to help you with different aspects of spaceTree.
