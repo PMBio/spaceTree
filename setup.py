@@ -5,7 +5,7 @@ setup(
     version="0.1.0",  # Version
     author="Your Name",
     author_email="olazareva1993@gmail.com",
-    description="A package for spatial reference transfer",  # Short description
+    description="PyPI package for multi-task label transfer from single-cell refrence data to spatial data",  # Short description
     long_description=open('README.md').read(),  # Long description from your README file
     long_description_content_type='text/markdown',
     url="https://github.com/PMBio/spaceTree",  # Link to your project (if available)

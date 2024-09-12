@@ -143,7 +143,7 @@ Calibrates the predicted results using temperature scaling.
  - <b>`node_encoder_rev`</b> (dict):  The reverse node encoder dictionary. 
  - <b>`node_encoder_ct`</b> (dict):  The cell type node encoder dictionary. 
  - <b>`node_encoder_cl`</b> (dict):  The clone node encoder dictionary. 
- - <b>`t`</b> (float):  The temperature parameter for scaling. 
+ - <b>`t`</b> (tuple):  The temperature parameter for scaling clone (t[0]) and cell type (t[1]) predictions.
 
 
 
