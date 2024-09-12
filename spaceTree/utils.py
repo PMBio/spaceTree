@@ -109,7 +109,7 @@ def get_calibrated_results(pred, data, node_encoder_rev, node_encoder_ct, node_e
         node_encoder_rev (dict): The reverse node encoder dictionary.
         node_encoder_ct (dict): The cell type node encoder dictionary.
         node_encoder_cl (dict): The clone node encoder dictionary.
-        t (float): The temperature parameter for scaling.
+        t (tuple): The temperature parameter for scaling.t[0] corresponds to the clone temperature and t[1] corresponds to the cell type temperature.
 
     Returns:
         tuple: A tuple containing the calibrated results for clones and cell types.
@@ -124,8 +124,8 @@ def get_calibrated_results(pred, data, node_encoder_rev, node_encoder_ct, node_e
         probs = np.exp((res - max_res) / t)
         probs = probs / np.sum(probs, axis=1, keepdims=True)
         return pd.DataFrame(probs, index=idx, columns=cols)
-    res_clone = calibrate(res_clone,t)
-    res_ct = calibrate(res_ct,t)
+    res_clone = calibrate(res_clone,t[0])
+    res_ct = calibrate(res_ct,t[1])
     return(res_clone,res_ct)
 
 def get_results_clone(pred, data, node_encoder_rev, node_encoder_cl, activation=None):

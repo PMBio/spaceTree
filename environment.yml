@@ -1,0 +1,54 @@
+name: st_test
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+  - bioconda
+dependencies:
+  # Core dependencies
+  - python=3.10
+  - ipykernel
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
+  - matplotlib
+  - seaborn
+  - h5py
+  - pytorch=2.0.1
+  - torchvision
+  - torchaudio
+  - jupyter
+  - requests
+  - pip  
+  - openpyxl 
+  - pip:
+      - absl-py
+      - aiobotocore
+      - aiohttp
+      - aiosignal
+      - anndata
+      - async-timeout
+      - attrs
+      - botocore
+      - chex
+      - cloudpickle
+      - dask
+      - dask-image
+      - datashader
+      - distributed
+      - flax
+      - geopandas
+      - gseapy
+      - infercnvpy
+      - jax
+      - jaxlib
+      - joblib
+      - pytorch-lightning
+      - scanpy
+      - scvi-tools
+      - shapely
+      - squidpy
+      - tensorboard
+      - tqdm
+      - umap-learn

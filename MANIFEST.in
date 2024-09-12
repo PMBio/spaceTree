@@ -1,0 +1,3 @@
+global-exclude *.pyc *.h5 *.csv *.xlsx
+prune data
+prune notebooks

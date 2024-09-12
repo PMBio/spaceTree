@@ -12,38 +12,6 @@ nav_order: 2
 
 
 
-
-
----
-
-<a href="../spaceTree/preprocessing.py#L15"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-## <kbd>function</kbd> `flatten`
-
-```python
-flatten(l)
-```
-
-
-
-
-
-
----
-
-<a href="../spaceTree/preprocessing.py#L17"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-## <kbd>function</kbd> `rna_seq_prep`
-
-```python
-rna_seq_prep(adata_seq)
-```
-
-
-
-
-
-
 ---
 
 <a href="../spaceTree/preprocessing.py#L25"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
@@ -120,35 +88,6 @@ Display the distribution of weights for each node in a spatial dataset.
 
 ---
 
-<a href="../spaceTree/preprocessing.py#L174"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-## <kbd>function</kbd> `normalize_edge_weights`
-
-```python
-normalize_edge_weights(edges)
-```
-
-
-
-
-
-
----
-
-<a href="../spaceTree/preprocessing.py#L179"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-## <kbd>function</kbd> `convert_array_row_col_to_int`
-
-```python
-convert_array_row_col_to_int(visium)
-```
-
-
-
-
-
-
----
 
 <a href="../spaceTree/preprocessing.py#L186"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
