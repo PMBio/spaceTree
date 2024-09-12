@@ -1,5 +1,5 @@
 <div style="text-align: center;">
-  <img src="https://github.com/PMBio/spaceTree/blob/master/docs/space_tree.png?raw=true alt="spacetree logo" width="200"/>
+  <img src="https://github.com/PMBio/spaceTree/blob/master/docs/space_tree.png?raw=true" alt="spacetree logo" width="200"/>
 </div>
 
 SpaceTree: Deciphering Tumor Microenvironments by joint modeling of cell states and genotype-phenotype relationships in spatial omics data 
@@ -13,7 +13,7 @@ The model outputs can be used to characterize spatial niches that have consisten
 
 
 <div style="text-align: center;">
-  <img src="https://github.com/PMBio/spaceTree/blob/master/docs/schema.jpg?raw=true" alt="spacetree logo" width="1000"/>
+  <img src="https://github.com/PMBio/spaceTree/blob/master/docs/schema.jpg?raw=true" alt="spacetree schema" width="1000"/>
 </div>
 
 Overview of the spatial mapping approach and the workflow enabled by SpaceTree.From left to right: SpaceTree requirs as input reference (scRNA-seq) and spatial count matrices as well as labels that need to be transfered. The labels can be descrete, continious or hierachical. The model outputs a spatial mapping of the labels and the cell type (compositions in case of Visium) of the spatial regions.
