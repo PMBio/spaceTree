@@ -12,10 +12,10 @@ nav_order: 1
 
 Welcome to the official documentation for spaceTree! Here, you will find tutorials and guides to help you get started and make the most out of our tool.
 # Table of contents
-1. [Installation](installation)
-    1. [pytorch & pytorch geometric dependencies](dependency)
-    2. [spaceTree Installation](spacetree)
-2. [Tutorials](tutorials)
+1. [Installation](#installation)
+    1. [pytorch & pytorch geometric dependencies](#dependency)
+    2. [spaceTree Installation](#spacetree)
+2. [Tutorials](tutorials/index.md)
     1. [Cell state and clone mapping to 10x Visium with SpaceTree](tutorials/cell-state-clone-mapping.md)
     2. [Cell state and clone mapping to 10x Xenium with SpaceTree](tutorials/cell-state-clone-mapping-xenium.md)
     3. [Visium HD data tips and tricks](tutorials/visium-hd.md)
