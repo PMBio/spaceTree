@@ -18,7 +18,7 @@ setup(
             'matplotlib',
             'seaborn',
             'h5py',
-            'torch==2.0.1',
+            'torch>=2.0.1',
             'torchvision',
             'torchaudio',
             'requests',
