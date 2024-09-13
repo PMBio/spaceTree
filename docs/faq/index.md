@@ -1,9 +1,9 @@
 ---
 layout: default
-title: FAQ
+title: "FAQ"
 nav_order: 4
-has_children: false
 ---
+
 
 # FAQ
 - **Q:** What if I want to map only cell states, but not clones?

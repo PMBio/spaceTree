@@ -1,67 +1,36 @@
 title: "spaceTree Documentation"
-remote_theme: pmarsceill/just-the-docs
-
-# Optional settings for the theme
-search_enabled: true
-search_tokenizer_separator: /[\s/]+/
-search_preview_length: 15
-search_result_path: /search/
+remote_theme: "just-the-docs/just-the-docs"
 
 # Site settings
-logo: "space_tree.png"  # Ensure this path is correct
-description: >- 
+description: >-
   Welcome to the official documentation for spaceTree! Here, you will find tutorials and guides to help you get started and make the most out of our tool.
 baseurl: "/spaceTree"  # The subpath of your site (relative to the domain root)
-url: "https://pmbio.github.io" # The base hostname & protocol for your site
+url: "https://pmbio.github.io"  # The base hostname & protocol for your site
 
-# Auxiliary links configuration
-aux_links:
-  "View on GitHub":
-    - "https://github.com/PMBio/spaceTree"
-# Show edit links on GitHub
-show_edit_on_github: true
-aux_links_new_tab: true
-
-# Navigation settings for Just the Docs
+# Just the Docs theme settings
 just_the_docs:
-  logo: "space_tree.png"
-  logo_alt: "spacetree logo"
+  # Logo configuration
+  logo:
+    src: "space_tree.png"  # Adjust the path to your logo
+    alt: "spaceTree logo"
 
-# Sidebar navigation configuration
-nav:
-  - title: "Home"
-    url: "/spaceTree/"
-  - title: "Installation"
-    url: "/spaceTree/installation"
-  - title: "Tutorials"
-    children:
-      - title: "Visium/grid-based data"
-        url: "/spaceTree/tutorials/cell-state-clone-mapping"
-      - title: "Xenium data"
-        url: "/spaceTree/tutorials/cell-state-clone-mapping-xenium"
-      - title: "Visium HD tips and tricks"
-        url: "/spaceTree/tutorials/visium-hd"
-  - title: "API Reference"
-    children:
-      - title: "spaceTree model"
-        url: "/spaceTree/api/models"
-      - title: "Data preprocessing"
-        url: "/spaceTree/api/preprocessing"
-      - title: "Dataset creation"
-        url: "/spaceTree/api/dataset"
-      - title: "Utilities"
-        url: "/spaceTree/api/utils"
-nav_external_links:
-  - title: View on GitHub
-    url: https://github.com/PMBio/spaceTree
+  # Search settings
+  search:
+    enabled: true
+    tokenizer_separator: /[\s/]+/
+    preview_length: 15
 
+  # Repository settings for "Edit on GitHub" links
+  repository:
+    base_url: "https://github.com/PMBio/spaceTree"  # The GitHub URL for your repo
+    branch: "master"  # The branch that your docs are served from
+    subdirectory: "docs"
 
-back_to_top: true
-back_to_top_text: "Back to top"
+  # Enabling "Edit this page" links
+  editing:
+    enabled: true
+    edit_on_github_text: "Edit this page on GitHub"
 
-gh_edit_link: true # show or hide edit this page link
-gh_edit_link_text: "Edit this page on GitHub"
-gh_edit_repository: "https://github.com/PMBio/spaceTree" # the github URL for your repo
-gh_edit_branch: "main" # the branch that your docs is served from
-# gh_edit_source: docs # the source that your files originate from
-gh_edit_view_mode: "edit" # "tree" or "edit" if you want the user to jump into the editor immediately
+# Optional: Enable breadcrumbs (if desired)
+breadcrumbs:
+  enabled: true
