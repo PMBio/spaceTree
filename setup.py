@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="spaceTree",  # Name of your package
-    version="0.1.3",  # Version
+    version="0.1.4",  # Version
     author="Olga Lazareva et al.",
     author_email="olazareva1993@gmail.com",
     description="PyPI package for multi-task label transfer from single-cell refrence data to spatial data",  # Short description
