@@ -44,7 +44,7 @@ python -c "import torch_geometric; print(torch_geometric.typing.WITH_PYG_LIB)"
 If the output is `TRUE`, then the installation was successful. If not, please check the error message and try to resolve the issue based on the pytorch, pytorch geometric and pyg-lib documentation.
 
 ### spaceTree Installation <a name="spacetree"></a>
-Once you completed the installation of the dependencies, you can install spaceTreeusing pip or from source.
+Once you completed the installation of the dependencies, you can install spaceTree using pip or from source.
 
 Installation with pip:
 ```bash
