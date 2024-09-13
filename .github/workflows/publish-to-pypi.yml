@@ -1,9 +1,9 @@
 name: Publish Python Package
 
 on:
-  push:
-    branches:
-      - master  # or your preferred branch
+  release:
+    types:
+      - created  # This workflow will run when a new release is created
 
 jobs:
   build:
@@ -26,10 +26,15 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
 
-    - name: Publish to PyPI
-      env:
-        TWINE_USERNAME: "__token__"
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      run: |
-        python -m pip install --upgrade twine
-        twine upload dist/*
+    # - name: Publish to PyPI
+    #   env:
+    #     TWINE_USERNAME: "__token__"
+    #     TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+    #   run: |
+    #     python -m pip install --upgrade twine
+    #     twine upload dist/*
+    - name: Publish package to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.8.10
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}

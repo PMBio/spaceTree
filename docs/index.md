@@ -19,6 +19,9 @@ Welcome to the official documentation for spaceTree! Here, you will find tutoria
     1. [Cell state and clone mapping to 10x Visium with SpaceTree](tutorials/cell-state-clone-mapping.md)
     2. [Cell state and clone mapping to 10x Xenium with SpaceTree](tutorials/cell-state-clone-mapping-xenium.md)
     3. [Visium HD data tips and tricks](tutorials/visium-hd.md)
+3. [FAQ](faq/index.md)
+4. [API Reference](api/index.md)
+5. [Citation](#citation)
     
 ## Installation <a name="installation"></a>
 ### pytorch & pytorch geometric dependencies <a name="dependency"></a>
@@ -80,3 +83,9 @@ If you need help defining clones based on your own scRNA-seq data, you can use t
 
 For the sake of the Visium and Xenium tutorials, we also show how we ran the clone inference based on inferCNVpy [here](https://github.com/PMBio/spaceTree/blob/master/notebooks/infercnv_run.ipynb)
 
+## Citiation <a name="citation"></a>
+If you use spaceTree in your research, please cite our paper:
+
+```
+To be added 
+```
