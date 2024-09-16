@@ -7,9 +7,9 @@ nav_order: 4
 
 # FAQ
 - **Q:** What if I want to map only cell states, but not clones?
-- **A:** In therory, spaceTree can be used with any type of labels that can be transfered from scRNA-seq to spatial data. In practice, a way to achive that at the moment requirs a few modifications to the tutorial:
+- **A:** In theory, spaceTree can be used with any labels that can be transferred from scRNA-seq to spatial data. In practice, a way to achieve that at the moment requires a few modifications to the tutorial:
 
-1) Currently the format of `data` object is fixed, but you can assign a dummy label to `clone` column in `adata.obs` by assigning roughlhly 50% of the cells to clone '0' and the rest to 'diploid'.
+1) Currently the format of `data` object is fixed, but you can assign a dummy label to `clone` column in `adata.obs` by assigning roughly 50% of the cells to clone '0' and the rest to 'diploid'.
 
 2) When you define the model, you need to set `map_enteties` to 'type' instead of 'both'. E.g.:
 ```python
@@ -21,11 +21,11 @@ model = GATLightningModule_sampler(data_param=data, weight_type=weight_type, map
 
 - **Q:** What if I want to map only clones, but not cell types?
 
-- **A:** In therory, spaceTree can be used with any type of labels that can be transfered from scRNA-seq to spatial data. In practice, a way to achive that at the moment requirs a few modifications to the tutorial:
+- **A:** In theory, spaceTree can be used with any type of label that can be transferred from scRNA-seq to spatial data. In practice, a way to achieve that at the moment requires a few modifications to the tutorial:
 
-1) Currently the format of `data` object is fixed, but you can assign a dummy label to 'cell_type' column in `adata_ref.obs` by assigning roughlhly 50% of the cells to dummy_cell_type1 and the rest to 'dummy_cell_type2' (or use any other names).
+1) Currently the format of `data` object is fixed, but you can assign a dummy label to the 'cell_type' column in `adata_ref.obs` by assigning roughly 50% of the cells to dummy_cell_type1 and the rest to 'dummy_cell_type2' (or use any other names).
 
-2) When you define the model, you need to set `map_enteties` to 'clone' instead of 'both'. E.g.:
+2) When you define the model, you must set `map_enteties` to 'clone' instead of 'both'. E.g.:
 ```python
 model = GATLightningModule_sampler(data_param=data, weight_clone=weight_clone, map_enteties='clone')
 ```
@@ -33,10 +33,10 @@ model = GATLightningModule_sampler(data_param=data, weight_clone=weight_clone, m
 <div style="page-break-before:always">&nbsp;</div>
 <p></p>
 
-- **Q:** What if I want to map a different type of labels, e.g. cell types and cell cycle phases?
-- **A:** In therory, spaceTree can be used with any type of labels that can be transfered from scRNA-seq to spatial data. In practice, due to due to the fixed format of clonal labels, you might have to represent cell cycle phases as clones: e.g. "diploid","0","1", etc.
+- **Q:** What if I want to map a different type of label, e.g. cell types and cell cycle phases?
+- **A:** In theory, spaceTree can be used with any labels that can be transferred from scRNA-seq to spatial data. In practice, due to the fixed format of clonal labels, you might have to represent cell cycle phases as clones: e.g. "diploid","0","1", etc.
 
 - **Q:** What if I want to use more than 2 sets of labels?
-- **A:** Right now we do not support more than 2 sets of labels. However, if you feel confident in your programming skills, you can modify the code of model and the evaluation functions to support more than 2 sets of labels.
+- **A:** Right now we do not support more than 2 sets of labels. However, if you feel confident in your programming skills, you can modify the code of the model and the evaluation functions to support more than 2 sets of labels.
 
 
