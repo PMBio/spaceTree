@@ -24,16 +24,16 @@ Welcome to the official documentation for spaceTree! Here, you will find tutoria
 5. [Citation](#citation)
     
 ## Installation <a name="installation"></a>
-### pytorch & pytorch geometric dependencies <a name="dependency"></a>
-SpaceTree reles on `pytorch`,`pytorch geometric` and `pyg-lib` libraries for GNNs and efficient graph sampling routines. It was develoed and tested with `pytorch==2.0.1`, `torch-geometric==2.5.0` and `pyg-lib==0.2.0+pt20cu118`. We recommend to use the same versions, when possible, otherwise just go with the ones that are compatable with your CUDA version. 
+### PyTorch & PyTorch geometric dependencies <a name="dependency"></a>
+SpaceTree relies on `pytorch`,`pytorch geometric`, and `pyg-lib` libraries for GNNs and efficient graph sampling routines. It was developed and tested with `pytorch==2.0.1`, `torch-geometric==2.5.0` and `pyg-lib==0.2.0+pt20cu118`. We recommend using the same versions, when possible, otherwise, just go with the ones that are compatible with your CUDA version. 
 
-To install versions compatible with your CUDA version, please visit the offical documentation of [pytorch](https://pytorch.org/get-started/locally/) (1), [pytorch geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html) (2) and [pyg-lib](https://github.com/pyg-team/pyg-lib) (3) and complete the installations **in that order**.
+To install versions compatible with your CUDA version, please visit the official documentation of [pytorch](https://pytorch.org/get-started/locally/) (1), [pytorch geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html) (2) and [pyg-lib](https://github.com/pyg-team/pyg-lib) (3) and complete the installations **in that order**.
 
-Please note, that access to GPU is adviced, but not nessesary, especially if the data size is not too large (i.e. for Visium HD we strongly recommend to use GPU).
+Please note, that access to GPU is advised, but not necessary, especially if the data size is not too large (i.e. for Visium HD we strongly recommend using GPU).
 
 #### Example installation routine
 
-To demonstrate the logic, here is **an example** installation for MacOS 14 without CUDA (CPU-only) and Python 3.10 (if that is not your desired configuration, please **do not** adjust the commands yourself, but refer to the official documentation of the libraries, because syntax is platform dependent and some versions might be not compatable with each other):
+To demonstrate the logic, here is **an example** installation for MacOS 14 without CUDA (CPU-only) and Python 3.10 (if that is not your desired configuration, please **do not** adjust the commands yourself, but refer to the official documentation of the libraries, because the syntax is platform dependent and some versions might be not compatible with each other):
 ```python
 conda create -y -n spacetree_env python=3.10
 conda activate spacetree_env
@@ -83,7 +83,7 @@ If you need help defining clones based on your own scRNA-seq data, you can use t
 
 For the sake of the Visium and Xenium tutorials, we also show how we ran the clone inference based on inferCNVpy [here](https://github.com/PMBio/spaceTree/blob/master/notebooks/infercnv_run.ipynb)
 
-## Citiation <a name="citation"></a>
+## Citation <a name="citation"></a>
 If you use spaceTree in your research, please cite our paper:
 
 ```
