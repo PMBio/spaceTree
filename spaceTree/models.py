@@ -107,9 +107,13 @@ class GATLightningModule_sampler(pl.LightningModule):
             self.log('train_loss_clone', loss_clone, on_epoch=True, logger=True, on_step=False, batch_size=batch.x.size(0))
             loss = loss_clone
         if "type" in mapping:
-            loss_type = F.nll_loss(pred_cell_type, batch.y_type)
-            loss_type = (loss_type * self.weight_type[batch.y_type]).sum()
-            loss_type = loss_type / self.weight_type[batch.y_type].sum()
+            loss_type = F.nll_loss(
+                pred_cell_type,
+                batch.y_type,
+                reduction="none",
+            )
+            loss_type = loss_type * self.weight_type[batch.y_type]
+            loss_type = loss_type.sum() / self.weight_type[batch.y_type].sum()
             self.log('train_loss_type', loss_type, on_epoch=True, logger=True, on_step=False, batch_size=batch.x.size(0))
             loss = loss_type
         if self.map_enteties == "both":
@@ -149,8 +153,13 @@ class GATLightningModule_sampler(pl.LightningModule):
             self.log('validation_acc_clone', acc_clone, on_epoch=True, logger=True, prog_bar=True, on_step=False, batch_size=batch.x.size(0))
             loss = loss_clone
         if "type" in mapping:
-            loss_type = F.nll_loss(pred_cell_type, batch.y_type, reduction='none')
-            loss_type = (loss_type * self.weight_type[batch.y_type]).mean()
+            loss_type = F.nll_loss(
+                pred_cell_type,
+                batch.y_type,
+                reduction="none",
+            )
+            loss_type = loss_type * self.weight_type[batch.y_type]
+            loss_type = loss_type.sum() / self.weight_type[batch.y_type].sum()
             pred_cell_type1 = pred_cell_type.argmax(dim=1)
             correct_types = (pred_cell_type1 == batch.y_type).sum()
             acc_type = int(correct_types) / len(batch.y_clone)
