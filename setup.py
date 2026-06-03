@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="spaceTree",  # Name of your package
-    version="0.1.8",  # Version
+    version="0.1.9",  # Version
     author="Olga Lazareva et al.",
     author_email="olazareva1993@gmail.com",
-    description="PyPI package for multi-task label transfer from single-cell refrence data to spatial data",  # Short description
+    description="PyPI package for multi-task label transfer from single-cell reference data to spatial data",
     long_description=open('README.md').read(),  # Long description from your README file
     long_description_content_type='text/markdown',
     url="https://github.com/PMBio/spaceTree",  # Link to your project (if available)
